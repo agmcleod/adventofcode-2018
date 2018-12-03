@@ -14,3 +14,7 @@ path = "1/main.rs"
 name = "2"
 path = "2/main.rs"
 
+[[bin]]
+name = "3"
+path = "3/main.rs"
+

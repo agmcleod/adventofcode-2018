@@ -5,7 +5,9 @@ use std::collections::HashSet;
 fn main() {
     let text = read_input::read_text("1/input.txt").unwrap();
 
-    let nums: Vec<i32> = text.lines().map(|line| line.parse().expect("Could not parse")).collect();
+    let nums: Vec<i32> = text.lines()
+        .map(|line| line.parse().expect("Could not parse"))
+        .collect();
     let sum = nums.iter().fold(0, |n, v| n + v);
     println!("{}", sum);
 
@@ -19,7 +21,7 @@ fn main() {
         sum += nums.get(index % nums.len()).unwrap();
         if set.contains(&sum) {
             println!("already seen {}", sum);
-            break
+            break;
         } else {
             set.insert(sum);
             index += 1;
