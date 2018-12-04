@@ -57,9 +57,11 @@ fn part_one(text: &String) {
 }
 
 fn part_two(text: &String) {
-    'main: for line in text.lines() {
-        for line2 in text.lines() {
-            if line == line2 {
+    let lines: Vec<&str> = text.lines().collect();
+    'main: for (i, line) in lines.iter().enumerate() {
+        for idx in (i + 1)..lines.len() {
+            let line2 = lines[idx];
+            if *line == line2 {
                 continue;
             }
 
