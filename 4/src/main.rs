@@ -1,7 +1,7 @@
 extern crate read_input;
 
-use std::collections::HashMap;
 use std::cmp;
+use std::collections::HashMap;
 
 #[derive(Debug)]
 enum Mode {
@@ -26,7 +26,7 @@ struct SleepEntry {
 
 impl SleepEntry {
     fn new() -> Self {
-        SleepEntry{
+        SleepEntry {
             times: HashMap::new(),
             total_count: 0,
         }
@@ -46,10 +46,10 @@ fn sol(entries: &Vec<Entry>) {
         match entry.mode {
             Mode::StartsShift => {
                 guard_id = entry.guard_id;
-            },
+            }
             Mode::FallsAsleep => {
                 sleep_time = entry.time;
-            },
+            }
             Mode::WakesUp => {
                 for minute in sleep_time..entry.time {
                     let mut sleep_entry = sleep_tracker.get_mut(&entry.guard_id).unwrap();
@@ -79,7 +79,13 @@ fn sol(entries: &Vec<Entry>) {
 
                 flattened_minute_data.push((minute, count, guard_id));
             }
-            println!("guard {} slept on {} {} times, meaning {}", guard_id, max_sleep.0, max_sleep.1, max_sleep.0 * guard_id);
+            println!(
+                "guard {} slept on {} {} times, meaning {}",
+                guard_id,
+                max_sleep.0,
+                max_sleep.1,
+                max_sleep.0 * guard_id
+            );
         } else {
             for (minute, count) in &sleep_entry.times {
                 flattened_minute_data.push((minute, count, guard_id));
@@ -87,13 +93,14 @@ fn sol(entries: &Vec<Entry>) {
         }
     }
 
-    flattened_minute_data.sort_by(|a, b| {
-        b.1.cmp(a.1)
-    });
+    flattened_minute_data.sort_by(|a, b| b.1.cmp(a.1));
 
     println!("{:?}", flattened_minute_data[0]);
 
-    println!("{}", flattened_minute_data[0].0 * flattened_minute_data[0].2);
+    println!(
+        "{}",
+        flattened_minute_data[0].0 * flattened_minute_data[0].2
+    );
 }
 
 fn main() {
@@ -112,8 +119,7 @@ fn main() {
         let mut timestamp = timestamp.split(" ");
         let date = timestamp.next().unwrap().to_string();
         let time = timestamp.next().unwrap();
-        let time = time
-            .split(":")
+        let time = time.split(":")
             .nth(1)
             .unwrap()
             .parse()
@@ -142,11 +148,11 @@ fn main() {
             }
         };
 
-        let mut entry = Entry{
+        let mut entry = Entry {
             guard_id,
             date,
             time,
-            mode
+            mode,
         };
 
         entries.push(entry);

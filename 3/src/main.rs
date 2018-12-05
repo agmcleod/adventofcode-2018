@@ -1,7 +1,7 @@
 extern crate read_input;
 
-use std::collections::{HashMap};
 use std::cmp;
+use std::collections::HashMap;
 
 #[derive(Debug)]
 struct Vector2 {
@@ -16,9 +16,7 @@ struct SquareInch {
 
 impl SquareInch {
     fn new() -> Self {
-        SquareInch{
-            ids: Vec::new(),
-        }
+        SquareInch { ids: Vec::new() }
     }
 }
 
@@ -33,30 +31,28 @@ impl Claim {
     fn from_text(id: usize, text: &str) -> Self {
         let transform = text.split("@ ").nth(1).unwrap();
         let mut pieces = transform.split(": ");
-        let mut pos = Vector2{x: 0, y: 0};
+        let mut pos = Vector2 { x: 0, y: 0 };
         let mut coords = pieces.next().unwrap().split(",");
         pos.x = coords.next().unwrap().parse().expect("Could not parse x");
         pos.y = coords.next().unwrap().parse().expect("Could not parse y");
 
-        let mut size = Vector2{x: 0, y: 0};
+        let mut size = Vector2 { x: 0, y: 0 };
         let mut coords = pieces.next().unwrap().split("x");
         size.x = coords.next().unwrap().parse().expect("Could not parse w");
         size.y = coords.next().unwrap().parse().expect("Could not parse h");
 
-        Claim{
-            id,
-            pos,
-            size,
-        }
+        Claim { id, pos, size }
     }
 }
 
 fn main() {
     let input = read_input::read_text("3/input.txt").unwrap();
 
-    let claims: Vec<Claim> = input.lines().enumerate().map(|(i, line)| {
-        Claim::from_text(i + 1, line)
-    }).collect();
+    let claims: Vec<Claim> = input
+        .lines()
+        .enumerate()
+        .map(|(i, line)| Claim::from_text(i + 1, line))
+        .collect();
 
     let mut fabric: HashMap<(usize, usize), SquareInch> = HashMap::new();
     let mut count = 0;
@@ -85,17 +81,19 @@ fn main() {
 
     // store the highest count for each id, across their squares.
     // As some can have a count of 1, and others a count of 2 for the same ID
-    let result = fabric.iter().fold(HashMap::new(), |mut obj, (_, square_inch)| {
-        for id in &square_inch.ids {
-            if obj.contains_key(&id) {
-                let mut count = obj.get_mut(&id).unwrap();
-                *count = cmp::max(*count, square_inch.ids.len());
-            } else {
-                obj.insert(id, square_inch.ids.len());
+    let result = fabric
+        .iter()
+        .fold(HashMap::new(), |mut obj, (_, square_inch)| {
+            for id in &square_inch.ids {
+                if obj.contains_key(&id) {
+                    let mut count = obj.get_mut(&id).unwrap();
+                    *count = cmp::max(*count, square_inch.ids.len());
+                } else {
+                    obj.insert(id, square_inch.ids.len());
+                }
             }
-        }
-        obj
-    });
+            obj
+        });
 
     for (id, value) in &result {
         if *value == 1 {
