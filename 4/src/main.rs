@@ -97,7 +97,7 @@ fn sol(entries: &Vec<Entry>) {
 }
 
 fn main() {
-    let text = read_input::read_text("input.txt").unwrap();
+    let text = read_input::read_text("4/input.txt").unwrap();
 
     let mut lines: Vec<&str> = text.lines().collect();
     lines.sort();

@@ -3,7 +3,7 @@ extern crate read_input;
 use std::collections::HashSet;
 
 fn main() {
-    let text = read_input::read_text("input.txt").unwrap();
+    let text = read_input::read_text("1/input.txt").unwrap();
 
     let nums: Vec<i32> = text.lines()
         .map(|line| line.parse().expect("Could not parse"))

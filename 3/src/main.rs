@@ -52,7 +52,7 @@ impl Claim {
 }
 
 fn main() {
-    let input = read_input::read_text("input.txt").unwrap();
+    let input = read_input::read_text("3/input.txt").unwrap();
 
     let claims: Vec<Claim> = input.lines().enumerate().map(|(i, line)| {
         Claim::from_text(i + 1, line)

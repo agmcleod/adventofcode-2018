@@ -88,7 +88,7 @@ fn part_two(text: &String) {
 }
 
 fn main() {
-    let text = read_input::read_text("input.txt").unwrap();
+    let text = read_input::read_text("2/input.txt").unwrap();
 
     part_one(&text);
     part_two(&text)

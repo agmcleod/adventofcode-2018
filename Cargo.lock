@@ -1,0 +1,39 @@
+[[package]]
+name = "five"
+version = "0.1.0"
+dependencies = [
+ "read_input 0.1.0",
+]
+
+[[package]]
+name = "four"
+version = "0.1.0"
+dependencies = [
+ "read_input 0.1.0",
+]
+
+[[package]]
+name = "one"
+version = "0.1.0"
+dependencies = [
+ "read_input 0.1.0",
+]
+
+[[package]]
+name = "read_input"
+version = "0.1.0"
+
+[[package]]
+name = "three"
+version = "0.1.0"
+dependencies = [
+ "read_input 0.1.0",
+]
+
+[[package]]
+name = "two"
+version = "0.1.0"
+dependencies = [
+ "read_input 0.1.0",
+]
+
