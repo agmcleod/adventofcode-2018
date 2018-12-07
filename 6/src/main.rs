@@ -15,6 +15,7 @@ fn main() {
     let mut min_y = 1_000_000;
     let mut max_x = 0;
     let mut max_y = 0;
+
     for line in text.lines() {
         let mut coord = (0, 0);
         let mut iter = line.split(", ").map(|v| v.parse().unwrap());
@@ -31,15 +32,22 @@ fn main() {
 
     let mut infinite_coords = HashSet::new();
 
+    let mut reachable_within_10k = 0;
+
     for x in min_x..=max_x {
         for y in min_y..=max_y {
-            if coords.contains_key(&(x, y)) {
-                continue
-            }
             let mut distances = Vec::new();
             for (pair, _) in &(coords) {
                 let distance = get_manhatten_distance(pair, x, y);
                 distances.push((pair.clone(), distance));
+            }
+
+            if distances.iter().fold(0, |sum, (_, distance)| sum + distance) < 10_000 {
+                reachable_within_10k += 1;
+            }
+
+            if x == 3 && y == 9 {
+                println!("{:?}", distances);
             }
 
             distances.sort_by(|a, b| {
@@ -48,14 +56,8 @@ fn main() {
 
             if distances[0].1 < distances[1].1 {
                 *coords.get_mut(&distances[0].0).unwrap() += 1;
-            }
-            if x == min_x || x == max_x || y == min_y || y == max_y {
-                let tied_distance = distances[0].1;
-                for distance in &distances {
-                    if distance.1 > tied_distance {
-                        break
-                    }
-                    infinite_coords.insert(distance.0.clone());
+                if x == min_x || x == max_x || y == min_y || y == max_y {
+                    infinite_coords.insert(distances[0].0.clone());
                 }
             }
         }
@@ -69,6 +71,8 @@ fn main() {
     }
 
     println!("{}", max_count);
+
+    println!("{}", reachable_within_10k);
 }
 
 
