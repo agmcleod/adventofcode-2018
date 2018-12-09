@@ -46,10 +46,6 @@ fn main() {
                 reachable_within_10k += 1;
             }
 
-            if x == 3 && y == 9 {
-                println!("{:?}", distances);
-            }
-
             distances.sort_by(|a, b| {
                 a.1.cmp(&b.1)
             });
