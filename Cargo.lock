@@ -53,6 +53,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "nine"
+version = "0.1.0"
+
+[[package]]
 name = "one"
 version = "0.1.0"
 dependencies = [
@@ -93,6 +97,13 @@ dependencies = [
 
 [[package]]
 name = "six"
+version = "0.1.0"
+dependencies = [
+ "read_input 0.1.0",
+]
+
+[[package]]
+name = "ten"
 version = "0.1.0"
 dependencies = [
  "read_input 0.1.0",
