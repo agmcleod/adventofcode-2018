@@ -45,11 +45,15 @@ fn main() {
     let mut lines = text.lines();
     let initial_state = lines.next().unwrap().clone();
     let initial_state = initial_state.replace("initial state: ", "");
-    let mut state: HashMap<i32, &str> = HashMap::new();
+    let state = {
+        let mut state: HashMap<i32, &str> = HashMap::new();
 
-    for (i, pot_state) in initial_state.split("").filter(|v| *v != "").enumerate() {
-        state.insert(i as i32, pot_state);
-    }
+        for (i, pot_state) in initial_state.split("").filter(|v| *v != "").enumerate() {
+            state.insert(i as i32, pot_state);
+        }
+
+        state
+    };
 
     let lines = lines.skip(1);
 
@@ -60,12 +64,13 @@ fn main() {
         replacements.insert(parts.next().unwrap().to_string(), parts.next().unwrap());
     }
 
+    let mut part_one_state = state.clone();
     for _ in 0..20 {
-        let result = sol(state, &replacements);
-        state = result.0;
+        let result = sol(part_one_state, &replacements);
+        part_one_state = result.0;
     }
 
-    let sum_of_pots_containing_plants = state.iter().fold(0, |sum, (i, pot)| {
+    let sum_of_pots_containing_plants = part_one_state.iter().fold(0, |sum, (i, pot)| {
         if *pot == "#" {
             sum + i
         } else {
@@ -76,29 +81,29 @@ fn main() {
     println!("{}", sum_of_pots_containing_plants);
 
     let mut index_to_generational_state = HashMap::new();
-    let mut generational_state = HashMap::new();
+    let mut generational_state: HashMap<String, (i32, i32, usize)> = HashMap::new();
+    let mut part_two_state = state;
     for i in 0..50_000_000_000usize {
-        let result = sol(state, &replacements);
-        state = result.0;
+        let result = sol(part_two_state, &replacements);
+        part_two_state = result.0;
 
         let state_string: String = (result.1..=result.2).map(|i| {
-            state.get(&i).unwrap()
+            part_two_state.get(&i).unwrap()
         }).cloned().collect();
 
         if generational_state.contains_key(&state_string) {
-            let (min, _, repeat_index) = generational_state.get(&state_string).unwrap();
-            let cycle_size: usize = i - repeat_index;
-            let newgoal = 50_000_000_000 - repeat_index;
-            let index = newgoal % cycle_size + repeat_index;
-
-            let state: &String = index_to_generational_state.get(&index).unwrap();
-            println!("{}", state.split("").filter(|ch| *ch != "").enumerate().fold(0, |sum, (i, pot_state)| {
-                if pot_state == "#" {
-                    sum + i as i32 + min
+            // we subtract one here, as we want to check the NEXT iteration.
+            // the current index has already been modifed
+            let adder = 50_000_000_000 - i - 1;
+            println!("{}", i);
+            let sum = part_two_state.iter().fold(0, |sum, (i, pot)| {
+                if *pot == "#" {
+                    sum + *i as usize + adder
                 } else {
-                    sum
+                    sum + 0
                 }
-            }));
+            });
+            println!("{}", sum);
             break
         } else {
             generational_state.insert(state_string.clone(), (result.1, result.2, i));
