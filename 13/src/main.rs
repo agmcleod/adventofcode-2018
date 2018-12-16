@@ -1,7 +1,7 @@
 extern crate read_input;
 
-use std::collections::{HashMap, HashSet};
 use std::cmp::Ordering;
+use std::collections::{HashMap, HashSet};
 
 #[derive(Copy, Clone, Debug)]
 enum Direction {
@@ -14,33 +14,25 @@ enum Direction {
 impl Direction {
     fn from(&mut self, turn: &Turn) {
         *self = match *self {
-            Direction::Down => {
-                match turn {
-                    Turn::Left => Direction::Right,
-                    Turn::Right => Direction::Left,
-                    Turn::Straight => Direction::Down,
-                }
+            Direction::Down => match turn {
+                Turn::Left => Direction::Right,
+                Turn::Right => Direction::Left,
+                Turn::Straight => Direction::Down,
             },
-            Direction::Left => {
-                match turn {
-                    Turn::Left => Direction::Down,
-                    Turn::Right => Direction::Up,
-                    Turn::Straight => Direction::Left,
-                }
+            Direction::Left => match turn {
+                Turn::Left => Direction::Down,
+                Turn::Right => Direction::Up,
+                Turn::Straight => Direction::Left,
             },
-            Direction::Right => {
-                match turn {
-                    Turn::Left => Direction::Up,
-                    Turn::Right => Direction::Down,
-                    Turn::Straight => Direction::Right,
-                }
+            Direction::Right => match turn {
+                Turn::Left => Direction::Up,
+                Turn::Right => Direction::Down,
+                Turn::Straight => Direction::Right,
             },
-            Direction::Up => {
-                match turn {
-                    Turn::Left => Direction::Left,
-                    Turn::Right => Direction::Right,
-                    Turn::Straight => Direction::Up,
-                }
+            Direction::Up => match turn {
+                Turn::Left => Direction::Left,
+                Turn::Right => Direction::Right,
+                Turn::Straight => Direction::Up,
             },
         };
     }
@@ -58,10 +50,10 @@ impl Turn {
         match *self {
             Turn::Left => {
                 *self = Turn::Straight;
-            },
+            }
             Turn::Straight => {
                 *self = Turn::Right;
-            },
+            }
             Turn::Right => {
                 *self = Turn::Left;
             }
@@ -84,7 +76,7 @@ struct Cart {
 
 impl Cart {
     fn new(direction: Direction) -> Self {
-        Cart{
+        Cart {
             direction,
             turn: Turn::Right,
         }
@@ -95,45 +87,47 @@ fn add_direction_to_position(pos: &mut (usize, usize), direction: Direction) {
     match direction {
         Direction::Down => {
             pos.1 += 1;
-        },
+        }
         Direction::Left => {
             pos.0 -= 1;
-        },
+        }
         Direction::Up => {
             pos.1 -= 1;
-        },
+        }
         Direction::Right => {
             pos.0 += 1;
-        },
+        }
     }
 }
 
-fn step(railways: &HashMap<(usize, usize), Rail>, carts: &mut HashMap<(usize, usize), Cart>) -> Option<(usize, usize)> {
-    let mut cart_orders: Vec<((usize, usize))> = carts.iter().map(|(pos, _)| {
-        pos.clone()
-    }).collect();
+fn step(
+    railways: &HashMap<(usize, usize), Rail>,
+    collisions: &mut Vec<(usize, usize)>,
+    carts: &mut HashMap<(usize, usize), Cart>,
+) -> bool {
+    let mut cart_orders: Vec<((usize, usize))> = carts.iter().map(|(pos, _)| pos.clone()).collect();
 
-    cart_orders.sort_by(|a, b| {
-        match a.1.cmp(&(b.1)) {
-            Ordering::Equal => {
-                a.0.cmp(&(b.0))
-            },
-            Ordering::Greater => Ordering::Greater,
-            Ordering::Less => Ordering::Less,
-        }
+    cart_orders.sort_by(|a, b| match a.1.cmp(&(b.1)) {
+        Ordering::Equal => a.0.cmp(&(b.0)),
+        Ordering::Greater => Ordering::Greater,
+        Ordering::Less => Ordering::Less,
     });
 
     let mut positions_moved_to = HashSet::new();
-    let mut collision_pos = None;
 
     for pos in &cart_orders {
+        if !carts.contains_key(&pos) {
+            continue;
+        }
         let mut cart: Cart = carts.get(&pos).unwrap().to_owned();
         carts.remove(&pos).unwrap();
         let mut next_pos = pos.clone();
         add_direction_to_position(&mut next_pos, cart.direction);
         if positions_moved_to.contains(&next_pos) || carts.contains_key(&next_pos) {
-            collision_pos = Some(next_pos);
-            break
+            collisions.push(next_pos);
+            positions_moved_to.remove(&next_pos);
+            carts.remove(&next_pos);
+            continue;
         } else {
             positions_moved_to.insert(next_pos.clone());
 
@@ -147,7 +141,7 @@ fn step(railways: &HashMap<(usize, usize), Rail>, carts: &mut HashMap<(usize, us
                                 Direction::Right => Direction::Up,
                                 Direction::Up => Direction::Right,
                             }
-                        },
+                        }
                         Rail::BackSlashCorner => {
                             cart.direction = match cart.direction {
                                 Direction::Down => Direction::Right,
@@ -155,24 +149,33 @@ fn step(railways: &HashMap<(usize, usize), Rail>, carts: &mut HashMap<(usize, us
                                 Direction::Right => Direction::Down,
                                 Direction::Up => Direction::Left,
                             }
-                        },
+                        }
                         Rail::Intersection => {
                             cart.turn.next();
                             cart.direction.from(&cart.turn);
-                        },
+                        }
                         _ => {}
                     }
 
                     carts.insert(next_pos, cart);
-                },
+                }
                 None => {
-                    panic!("Could not find railway at: {:?}. {:?}, current pos: {:?}", next_pos, cart, pos);
+                    panic!(
+                        "Could not find railway at: {:?}. {:?}, current pos: {:?}",
+                        next_pos, cart, pos
+                    );
                 }
             }
         }
     }
 
-    collision_pos
+    if cart_orders.len() == 1 {
+        println!("First collision: {:?}", collisions.get(0));
+        println!("position for remaining cart: {:?}", cart_orders.get(0));
+        true
+    } else {
+        false
+    }
 }
 
 fn main() {
@@ -200,7 +203,7 @@ fn main() {
                         carts.insert((x, y), Cart::new(Direction::Down));
                     }
                     Rail::Straight
-                },
+                }
                 _ => panic!("Could not match '{}'", ch),
             };
 
@@ -208,12 +211,11 @@ fn main() {
         }
     }
 
-    let mut tick = 0;
+    let mut collisions: Vec<(usize, usize)> = Vec::new();
+
     loop {
-        if let Some(collision) = step(&railways, &mut carts) {
-            println!("Collision at: {:?} - {}", collision, tick);
-            break
+        if step(&railways, &mut collisions, &mut carts) {
+            break;
         }
-        tick += 1;
     }
 }

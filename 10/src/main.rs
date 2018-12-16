@@ -17,21 +17,24 @@ struct Spec {
 
 impl Spec {
     fn new(x: i32, y: i32, velx: i32, vely: i32) -> Self {
-        Spec{
-            position: Vector2{ x, y },
-            velocity: Vector2{ x: velx, y: vely },
+        Spec {
+            position: Vector2 { x, y },
+            velocity: Vector2 { x: velx, y: vely },
         }
     }
 }
 
 fn coords_string_to_vec(string: &str) -> Vec<i32> {
-    string.split(",").map(|n| {
-        if let Ok(result) = n.parse() {
-            result
-        } else {
-            panic!("Could not parse {} as i32", n);
-        }
-    }).collect()
+    string
+        .split(",")
+        .map(|n| {
+            if let Ok(result) = n.parse() {
+                result
+            } else {
+                panic!("Could not parse {} as i32", n);
+            }
+        })
+        .collect()
 }
 
 fn add_counts_to_map(map: &mut HashMap<i32, usize>, value: i32) {
@@ -44,19 +47,23 @@ fn add_counts_to_map(map: &mut HashMap<i32, usize>, value: i32) {
 
 fn main() {
     let text = read_input::read_text("10/input.txt").unwrap();
-    let mut specs: Vec<Spec> = text.lines().map(|line| {
-        let line = line.replace(" ", "").replace(">", "").replace("position=<", "");
-        let mut iter = line.split("velocity=<");
-        let pos: Vec<i32> = coords_string_to_vec(iter.next().unwrap());
-        let vel: Vec<i32> = coords_string_to_vec(iter.next().unwrap());
+    let mut specs: Vec<Spec> = text.lines()
+        .map(|line| {
+            let line = line.replace(" ", "")
+                .replace(">", "")
+                .replace("position=<", "");
+            let mut iter = line.split("velocity=<");
+            let pos: Vec<i32> = coords_string_to_vec(iter.next().unwrap());
+            let vel: Vec<i32> = coords_string_to_vec(iter.next().unwrap());
 
-        Spec::new(
-            *pos.get(0).unwrap(),
-            *pos.get(1).unwrap(),
-            *vel.get(0).unwrap(),
-            *vel.get(1).unwrap(),
-        )
-    }).collect();
+            Spec::new(
+                *pos.get(0).unwrap(),
+                *pos.get(1).unwrap(),
+                *vel.get(0).unwrap(),
+                *vel.get(1).unwrap(),
+            )
+        })
+        .collect();
 
     let spec_count = specs.len() as f32;
 
@@ -89,7 +96,8 @@ fn main() {
             max_y = cmp::max(max_y, spec.position.y);
         }
 
-        if (x_counts.len() as f32) < spec_count / 4.0 && (y_counts.len() as f32) < spec_count / 4.0 {
+        if (x_counts.len() as f32) < spec_count / 4.0 && (y_counts.len() as f32) < spec_count / 4.0
+        {
             println!("seconds: {}", seconds);
             for y in min_y..=max_y {
                 for x in min_x..=max_x {

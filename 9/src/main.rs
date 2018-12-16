@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use std::cmp;
+use std::collections::HashMap;
 
 fn add_score(player_scores: &mut HashMap<usize, usize>, player: usize, score: usize) {
     if player_scores.contains_key(&player) {
@@ -37,7 +37,7 @@ fn run_game(turns: usize, number_of_players: usize) {
     for (player, score) in &player_scores {
         if *score == highest_score {
             println!("winning elf {} with {}", player, score);
-            break
+            break;
         }
     }
 }

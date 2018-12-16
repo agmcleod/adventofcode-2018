@@ -42,13 +42,14 @@ fn main() {
                 distances.push((pair.clone(), distance));
             }
 
-            if distances.iter().fold(0, |sum, (_, distance)| sum + distance) < 10_000 {
+            if distances
+                .iter()
+                .fold(0, |sum, (_, distance)| sum + distance) < 10_000
+            {
                 reachable_within_10k += 1;
             }
 
-            distances.sort_by(|a, b| {
-                a.1.cmp(&b.1)
-            });
+            distances.sort_by(|a, b| a.1.cmp(&b.1));
 
             if distances[0].1 < distances[1].1 {
                 *coords.get_mut(&distances[0].0).unwrap() += 1;
@@ -70,7 +71,6 @@ fn main() {
 
     println!("{}", reachable_within_10k);
 }
-
 
 #[test]
 fn test_manhattent_distance() {

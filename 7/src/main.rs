@@ -5,7 +5,11 @@ use std::collections::{HashMap, HashSet};
 
 use regex::Regex;
 
-fn part_one(no_parents: &HashSet<String>, tree: &HashMap<String, Vec<String>>, child_to_parents: &HashMap<String, Vec<String>>) {
+fn part_one(
+    no_parents: &HashSet<String>,
+    tree: &HashMap<String, Vec<String>>,
+    child_to_parents: &HashMap<String, Vec<String>>,
+) {
     let mut tree_path = Vec::new();
     let mut processed_keys = HashSet::new();
     for start_key in no_parents {
@@ -17,7 +21,10 @@ fn part_one(no_parents: &HashSet<String>, tree: &HashMap<String, Vec<String>>, c
                 processed_keys.insert(key);
                 for next_key in next_keys {
                     if let Some(parents) = child_to_parents.get(next_key) {
-                        if parents.iter().fold(true, |result, key| result && processed_keys.contains(key)) {
+                        if parents
+                            .iter()
+                            .fold(true, |result, key| result && processed_keys.contains(key))
+                        {
                             current_keys.push(next_key.clone());
                         }
                     }
@@ -28,7 +35,7 @@ fn part_one(no_parents: &HashSet<String>, tree: &HashMap<String, Vec<String>>, c
             }
 
             if current_keys.len() == 0 {
-                break
+                break;
             }
         }
     }
@@ -43,14 +50,18 @@ struct Worker {
 
 impl Worker {
     fn new() -> Self {
-        Worker{
+        Worker {
             letter: "".to_string(),
             seconds_remaining: 0,
         }
     }
 }
 
-fn part_two(no_parents: &HashSet<String>, tree: &HashMap<String, Vec<String>>, child_to_parents: &HashMap<String, Vec<String>>) {
+fn part_two(
+    no_parents: &HashSet<String>,
+    tree: &HashMap<String, Vec<String>>,
+    child_to_parents: &HashMap<String, Vec<String>>,
+) {
     let mut seconds_required = HashMap::new();
     let alphabet = (b'A'..=b'Z')
         .map(|c| c as char)
@@ -74,7 +85,10 @@ fn part_two(no_parents: &HashSet<String>, tree: &HashMap<String, Vec<String>>, c
     for start_key in no_parents {
         let mut current_keys = vec![start_key.clone()];
         loop {
-            for worker in workers.iter_mut().filter(|worker| worker.seconds_remaining == 0) {
+            for worker in workers
+                .iter_mut()
+                .filter(|worker| worker.seconds_remaining == 0)
+            {
                 if current_keys.len() > 0 {
                     let key = current_keys.remove(0);
                     worker.letter = key.clone();
@@ -92,7 +106,9 @@ fn part_two(no_parents: &HashSet<String>, tree: &HashMap<String, Vec<String>>, c
                             processed_keys.insert(worker.letter.clone());
                             for next_key in next_keys {
                                 if let Some(parents) = child_to_parents.get(next_key) {
-                                    if parents.iter().fold(true, |result, key| result && processed_keys.contains(key)) {
+                                    if parents.iter().fold(true, |result, key| {
+                                        result && processed_keys.contains(key)
+                                    }) {
                                         current_keys.push(next_key.clone());
                                     }
                                 }
@@ -104,7 +120,7 @@ fn part_two(no_parents: &HashSet<String>, tree: &HashMap<String, Vec<String>>, c
             }
 
             if !working && current_keys.len() == 0 {
-                break
+                break;
             } else {
                 ticker += 1;
             }

@@ -1,7 +1,7 @@
 extern crate read_input;
 
-use std::collections::HashSet;
 use std::cmp;
+use std::collections::HashSet;
 
 fn apply_polymers(mut letters: Vec<&str>) -> usize {
     let mut index_to_drop = 0;
@@ -15,7 +15,7 @@ fn apply_polymers(mut letters: Vec<&str>) -> usize {
                 {
                     index_to_drop += i;
                     found = true;
-                    break
+                    break;
                 }
             }
         }
@@ -28,7 +28,7 @@ fn apply_polymers(mut letters: Vec<&str>) -> usize {
                 index_to_drop -= 1;
             }
         } else {
-            break 'main
+            break 'main;
         }
     }
 
@@ -38,10 +38,13 @@ fn apply_polymers(mut letters: Vec<&str>) -> usize {
 fn main() {
     let text = read_input::read_text("5/input.txt").unwrap();
     let mut letter_set = HashSet::new();
-    let letters: Vec<&str> = text.split("").filter(|v| *v != "" && *v != "\n").map(|letter| {
-        letter_set.insert(letter.to_lowercase());
-        letter
-    }).collect();
+    let letters: Vec<&str> = text.split("")
+        .filter(|v| *v != "" && *v != "\n")
+        .map(|letter| {
+            letter_set.insert(letter.to_lowercase());
+            letter
+        })
+        .collect();
 
     println!("{}", apply_polymers(letters.clone()));
 
@@ -49,8 +52,11 @@ fn main() {
     for letter_to_erase in &letter_set {
         let filtered_letters: Vec<&str> = letters
             .iter()
-            .filter(|letter| *letter != letter_to_erase && *letter != &letter_to_erase.to_uppercase())
-            .cloned().collect();
+            .filter(|letter| {
+                *letter != letter_to_erase && *letter != &letter_to_erase.to_uppercase()
+            })
+            .cloned()
+            .collect();
 
         let res = apply_polymers(filtered_letters);
         if length.is_some() {

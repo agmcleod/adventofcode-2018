@@ -1,9 +1,12 @@
 extern crate read_input;
 
-use std::collections::{HashMap};
 use std::cmp;
+use std::collections::HashMap;
 
-fn sol<'a>(state: HashMap<i32, &'a str>, replacements: &HashMap<String, &'a str>) -> (HashMap<i32, &'a str>, i32, i32) {
+fn sol<'a>(
+    state: HashMap<i32, &'a str>,
+    replacements: &HashMap<String, &'a str>,
+) -> (HashMap<i32, &'a str>, i32, i32) {
     let mut next_state = HashMap::new();
     let mut min = 100_000;
     let mut max = 0;
@@ -87,9 +90,10 @@ fn main() {
         let result = sol(part_two_state, &replacements);
         part_two_state = result.0;
 
-        let state_string: String = (result.1..=result.2).map(|i| {
-            part_two_state.get(&i).unwrap()
-        }).cloned().collect();
+        let state_string: String = (result.1..=result.2)
+            .map(|i| part_two_state.get(&i).unwrap())
+            .cloned()
+            .collect();
 
         if generational_state.contains_key(&state_string) {
             // we subtract one here, as we want to check the NEXT iteration.
@@ -104,7 +108,7 @@ fn main() {
                 }
             });
             println!("{}", sum);
-            break
+            break;
         } else {
             generational_state.insert(state_string.clone(), (result.1, result.2, i));
             index_to_generational_state.insert(i, state_string);
