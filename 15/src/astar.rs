@@ -5,7 +5,7 @@ use std::hash::Hash;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum TileType {
-    Unpassable, Open
+    Unpassable, Open, Unit
 }
 
 #[derive(Copy, Clone, Eq, PartialEq)]
@@ -16,7 +16,19 @@ pub struct Location {
 
 impl Ord for Location {
     fn cmp(&self, other: &Location) -> Ordering {
-        other.cost.cmp(&self.cost)
+        match other.cost.cmp(&self.cost) {
+            Ordering::Equal => {
+                match other.position.1.cmp(&self.position.1) {
+                    Ordering::Equal => {
+                        other.position.0.cmp(&self.position.0)
+                    },
+                    Ordering::Greater => Ordering::Greater,
+                    Ordering::Less => Ordering::Less,
+                }
+            },
+            Ordering::Greater => Ordering::Greater,
+            Ordering::Less => Ordering::Less,
+        }
     }
 }
 
@@ -39,33 +51,33 @@ fn distance_to_target(location: &(usize, usize), target: &(usize, usize)) -> usi
     x_diff as usize + y_diff as usize
 }
 
-pub fn get_neighbours(pos: &(usize, usize), tiles: &Vec<Vec<TileType>>) -> Vec<(usize, usize)> {
+pub fn get_neighbours(pos: &(usize, usize), tiles: &Vec<Vec<TileType>>, target: &(usize, usize)) -> Vec<(usize, usize)> {
     let mut neighbours: Vec<(usize, usize)> = Vec::with_capacity(4);
 
     if pos.0 > 0 {
         let tile_type = &tiles[pos.1][pos.0 - 1];
-        if *tile_type == TileType::Open {
+        if *tile_type == TileType::Open || (*tile_type == TileType::Unit && target.1 == pos.1 && target.0 == pos.0 - 1) {
             neighbours.push((pos.0 - 1, pos.1));
         }
     }
 
     if pos.0 < tiles[0].len() - 1 {
         let tile_type = &tiles[pos.1][pos.0 + 1];
-        if *tile_type == TileType::Open {
+        if *tile_type == TileType::Open || (*tile_type == TileType::Unit && target.1 == pos.1 && target.0 == pos.0 + 1) {
             neighbours.push((pos.0 + 1, pos.1));
         }
     }
 
     if pos.1 > 0 {
         let tile_type = &tiles[pos.1 - 1][pos.0];
-        if *tile_type == TileType::Open {
+        if *tile_type == TileType::Open || (*tile_type == TileType::Unit && target.1 == pos.1 - 1 && target.0 == pos.0) {
             neighbours.push((pos.0, pos.1 - 1));
         }
     }
 
     if pos.1 < tiles.len() - 1 {
         let tile_type = &tiles[pos.1 + 1][pos.0];
-        if *tile_type == TileType::Open {
+        if *tile_type == TileType::Open || (*tile_type == TileType::Unit && target.1 == pos.1 + 1 && target.0 == pos.0) {
             neighbours.push((pos.0, pos.1 + 1));
         }
     }
@@ -87,32 +99,15 @@ pub fn find_path(tiles: &Vec<Vec<TileType>>, start_pos: (usize, usize), target: 
         if location.position.0 == target.0 && location.position.1 == target.1 {
             break
         }
-        let neighbours = get_neighbours(&location.position, &tiles);
-        // modified version to account for reading order
-        let mut locations = Vec::new();
+        let neighbours = get_neighbours(&location.position, &tiles, &target);
         for neighbour in neighbours {
             let new_cost = costs.get(&location.position).unwrap() + 1;
             if !costs.contains_key(&neighbour) || new_cost < *costs.get(&neighbour).unwrap() {
                 // push to vec here, and we'll add shortest one by reading order to heap after
-                locations.push(Location{ position: neighbour, cost: new_cost + distance_to_target(&neighbour, &target) });
+                heap.push(Location{ position: neighbour, cost: new_cost + distance_to_target(&neighbour, &target) });
                 costs.insert(neighbour, new_cost);
                 closed.insert(neighbour, location.position);
             }
-        }
-
-        // since we're using a heap, push in reverse reading order
-        locations.sort_by(|a, b| {
-            match b.position.1.cmp(&a.position.1) {
-                Ordering::Equal => {
-                    b.position.0.cmp(&a.position.0)
-                },
-                Ordering::Greater => Ordering::Greater,
-                Ordering::Less => Ordering::Less,
-            }
-        });
-
-        for location in locations {
-            heap.push(location);
         }
     }
 
