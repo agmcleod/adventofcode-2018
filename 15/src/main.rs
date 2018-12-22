@@ -52,6 +52,24 @@ struct SelectionData {
     target_unit_coord: Coord,
 }
 
+struct FindNextData {
+    scanned_coords: HashSet<Coord>,
+    path: Vec<Coord>,
+}
+
+impl FindNextData {
+    fn new(scanned_coords: HashSet<Coord>, path: Vec<Coord>) -> Self {
+        FindNextData{
+            scanned_coords,
+            path,
+        }
+    }
+
+    fn get_coord(&self) -> &Coord {
+        self.path.get(self.path.len() - 1).unwrap()
+    }
+}
+
 impl SelectionData {
     fn new(target_coord: &Coord, hp: i32, move_to_coord: &Coord, target_unit_coord: &Coord) -> Self {
         SelectionData{
@@ -119,40 +137,45 @@ pub fn get_neighbours(
 }
 
 fn find_paths(
-    mut scanned_coords: HashSet<Coord>,
     tiles: &Vec<Vec<TileType>>,
     coord: &Coord,
     target: &Coord,
-    mut path: Vec<Coord>,
 ) -> Vec<Vec<Coord>> {
+
+    let mut scanned_coords = HashSet::new();
     scanned_coords.insert(coord.clone());
 
-    path.push(coord.clone());
-
-    if coord == target {
-        return vec![path];
-    }
-
     let mut paths = Vec::new();
-    let neighbours = get_neighbours(&scanned_coords, &coord, tiles);
-    for neighbour in &neighbours {
-        scanned_coords.insert((neighbour.0, neighbour.1));
-    }
 
-    let neighbour = neighbours.iter().filter(|neighbour| neighbour.0 == target.0 && neighbour.1 == target.1).next();
-    if let Some(neighbour) = neighbour {
-        let mut sub_paths = find_paths(scanned_coords.clone(), tiles, &(neighbour.0, neighbour.1), target, path.clone());
-        paths.append(&mut sub_paths);
-    } else {
+    let mut stack = vec![FindNextData::new(scanned_coords, vec![coord.clone()])];
+
+    let mut min_path_length = 10_000;
+
+    while stack.len() > 0 {
+        let mut current = stack.remove(0);
+        if current.get_coord() == target {
+            min_path_length = cmp::min(min_path_length, current.path.len());
+            paths.push(current.path.clone());
+            continue
+        }
+
+        if current.path.len() > min_path_length {
+            break
+        }
+
+        let neighbours = get_neighbours(&current.scanned_coords, current.get_coord(), tiles);
+        for neighbour in &neighbours {
+            current.scanned_coords.insert((neighbour.0, neighbour.1));
+        }
+
         for neighbour in &neighbours {
             if neighbour.2 == TileType::Unit {
                 continue
             }
             let neighbour = (neighbour.0, neighbour.1);
-            let mut sub_paths = find_paths(scanned_coords.clone(), tiles, &neighbour, target, path.clone());
-            if sub_paths.len() > 0 {
-                paths.append(&mut sub_paths);
-            }
+            let mut path = current.path.clone();
+            path.push(neighbour);
+            stack.push(FindNextData::new(current.scanned_coords.clone(), path));
         }
     }
 
@@ -222,8 +245,7 @@ fn select_target(
     min_distance: &mut usize,
     distances: &mut HashMap<usize, SelectionData>,
 ) {
-    let scanned_coords = HashSet::new();
-    let mut paths = find_paths(scanned_coords, &tiles, coord, target_coord, Vec::new());
+    let mut paths = find_paths(&tiles, coord, target_coord);
 
     let path = get_shortest_path(&mut paths);
 
@@ -480,8 +502,7 @@ mod tests {
             vec![TileType::Unpassable, TileType::Open, TileType::Unpassable, TileType::Open, TileType::Unpassable, TileType::Unit, TileType::Unpassable],
         ];
 
-        let scanned_coords = HashSet::new();
-        let mut paths = find_paths(scanned_coords, &tiles, &(2, 1), &(4, 1), Vec::new());
+        let mut paths = find_paths(&tiles, &(2, 1), &(4, 1));
 
         let path = get_shortest_path(&mut paths).unwrap();
         assert_eq!(*path, vec![(2, 1), (3, 1), (4, 1)]);
