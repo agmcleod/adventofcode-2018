@@ -46,11 +46,8 @@ fn main() {
                 {
                     // if its the last index of the digits, we found our input in the scoreboard
                     if i == digits.len() - 1 {
-                        println!(
-                            "Part 2: {}",
-                            recipes_length - i - reverse_index_offset
-                        );
-                        break 'main
+                        println!("Part 2: {}", recipes_length - i - reverse_index_offset);
+                        break 'main;
                     }
                 } else {
                     break;
