@@ -147,12 +147,12 @@ fn find_paths(
 
     let mut paths = Vec::new();
 
-    let mut stack = vec![FindNextData::new(scanned_coords, vec![coord.clone()])];
+    let mut stack = vec![FindNextData::new(scanned_coords.clone(), vec![coord.clone()])];
 
     let mut min_path_length = 10_000;
 
     while stack.len() > 0 {
-        let mut current = stack.remove(0);
+        let current = stack.remove(0);
         if current.get_coord() == target {
             min_path_length = cmp::min(min_path_length, current.path.len());
             paths.push(current.path.clone());
@@ -163,9 +163,9 @@ fn find_paths(
             break
         }
 
-        let neighbours = get_neighbours(&current.scanned_coords, current.get_coord(), tiles);
+        let neighbours = get_neighbours(&scanned_coords, current.get_coord(), tiles);
         for neighbour in &neighbours {
-            current.scanned_coords.insert((neighbour.0, neighbour.1));
+            scanned_coords.insert((neighbour.0, neighbour.1));
         }
 
         for neighbour in &neighbours {
@@ -206,6 +206,19 @@ fn update_target_if_in_reading_order(
     if new_coord.1 <= target_coord.1 || (new_coord.1 == target_coord.1 && new_coord.0 <= target_coord.0) {
         update_distance_data(distance_data, new_coord, target_hp, move_to_spot);
     }
+}
+
+fn sort_attack_targets(attack_targets: &mut Vec<Coord>, target_units: &HashMap<Coord, Unit>) {
+    attack_targets.sort_by(|a, b| {
+        let target_a = target_units.get(a).unwrap();
+        let target_b = target_units.get(b).unwrap();
+
+        match target_a.hp.cmp(&target_b.hp) {
+            Ordering::Equal => reading_order(a, b),
+            Ordering::Less => Ordering::Less,
+            Ordering::Greater => Ordering::Greater,
+        }
+    });
 }
 
 fn get_shortest_path<'a>(paths: &'a mut Vec<Vec<Coord>>) -> Option<&'a Vec<Coord>> {
@@ -282,7 +295,7 @@ fn attack(tiles: &mut Vec<Vec<TileType>>, target_units: &mut HashMap<Coord, Unit
         target_unit.hp <= 0
     };
     if dead {
-        println!("Dead at {:?}", target_unit_coord);
+        println!("Removing unit from {:?}", target_unit_coord);
         *tiles
             .get_mut(target_unit_coord.1)
             .unwrap()
@@ -294,6 +307,7 @@ fn attack(tiles: &mut Vec<Vec<TileType>>, target_units: &mut HashMap<Coord, Unit
 
 fn perform_move(
     tiles: &mut Vec<Vec<TileType>>,
+    empty_map: &HashSet<Coord>,
     units: &mut HashMap<Coord, Unit>,
     actioner_coord: &Coord,
     min_distance: &usize,
@@ -306,7 +320,20 @@ fn perform_move(
     let distance_data = distances.get(min_distance).unwrap();
     // if about to move into spot next to an enemy, do an attack
     if *min_distance <= 2 {
-        attack(tiles, target_units, &distance_data.target_unit_coord, units.get(actioner_coord).unwrap());
+        let mut attack_targets: Vec<Coord> = get_neighbours(empty_map, &distance_data.move_to_coord, tiles).iter().filter(|(x, y, tile_type)| {
+            if *tile_type == TileType::Unit {
+                target_units.contains_key(&(*x, *y))
+            } else {
+                false
+            }
+        }).map(|(x, y, _)| {
+            (*x, *y)
+        }).collect();
+
+        sort_attack_targets(&mut attack_targets, target_units);
+        let attack_target = attack_targets.get(0).unwrap();
+        println!("Attack from {:?} {:?} to {:?}", units.get(actioner_coord).unwrap(), actioner_coord, attack_target);
+        attack(tiles, target_units, attack_target, units.get(actioner_coord).unwrap());
     }
     // make old spot open, and new one unpassable
     *tiles
@@ -372,7 +399,6 @@ fn take_turn(empty_map: &HashSet<Coord>, tiles: &mut Vec<Vec<TileType>>, unit_co
                 continue
             }
 
-            // potential check here to
             if neighbour.2 == TileType::Open {
                 select_target(
                     &tiles,
@@ -388,22 +414,15 @@ fn take_turn(empty_map: &HashSet<Coord>, tiles: &mut Vec<Vec<TileType>>, unit_co
     }
 
     if attack_targets.len() > 0 {
-        attack_targets.sort_by(|a, b| {
-            let target_a = targets.get(a).unwrap();
-            let target_b = targets.get(b).unwrap();
-
-            match target_a.hp.cmp(&target_b.hp) {
-                Ordering::Equal => reading_order(a, b),
-                Ordering::Less => Ordering::Less,
-                Ordering::Greater => Ordering::Greater,
-            }
-        });
+        sort_attack_targets(&mut attack_targets, targets);
 
         let attack_target = attack_targets.get(0).unwrap();
+        println!("Attack from {:?} {:?} to {:?}", unit_collection.get(unit_coord).unwrap(), unit_coord, attack_target);
         attack(tiles, targets, attack_target, unit_collection.get(unit_coord).unwrap());
     } else {
         perform_move(
             tiles,
+            empty_map,
             unit_collection,
             unit_coord,
             &min_distance,
@@ -440,9 +459,9 @@ fn main() {
         tiles.push(row);
     }
 
-    let mut rounds = 1;
+    let mut rounds = 0;
 
-    // print_tiles(&tiles, &goblins, &elves);
+    print_tiles(&tiles, &goblins, &elves);
 
     // used for get_neighbours, for available spots around a target
     let empty_map: HashSet<Coord> = HashSet::new();
@@ -452,13 +471,10 @@ fn main() {
         let mut sorted_elf_coords = hash_map_coords_to_vec(&elves);
 
         if sorted_unit_coords.len() == 0 {
-            println!(
-                "Elves win {}",
-                rounds
-                    * sorted_elf_coords
-                        .iter()
-                        .fold(0, |sum, coord| sum + elves.get(coord).unwrap().hp)
-            );
+            let hp_sum = sorted_elf_coords
+                .iter()
+                .fold(0, |sum, coord| sum + elves.get(coord).unwrap().hp);
+            println!("Elves win {} * {} = {}", rounds, hp_sum, rounds * hp_sum);
             break;
         } else if sorted_elf_coords.len() == 0 {
             let hp_sum = sorted_unit_coords
@@ -473,7 +489,6 @@ fn main() {
         sort_coords(&mut sorted_unit_coords);
 
         for coord in &sorted_unit_coords {
-            println!("Take turn");
             let mut distances: HashMap<usize, SelectionData> = HashMap::new();
             let mut min_distance = 1000;
             if goblins.contains_key(coord) {
@@ -483,8 +498,8 @@ fn main() {
             }
         }
 
-        println!("Round: {}", rounds);
-        // print_tiles(&tiles, &goblins, &elves);
+        println!("{}", rounds + 1);
+        print_tiles(&tiles, &goblins, &elves);
         rounds += 1;
     }
 }
