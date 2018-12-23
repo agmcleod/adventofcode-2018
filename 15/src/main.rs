@@ -29,18 +29,18 @@ enum UnitType {
 #[derive(Copy, Clone, Debug)]
 struct Unit {
     unit_type: UnitType,
-    move_target: Option<Coord>,
     hp: i32,
     damage: i32,
+    took_turn: bool,
 }
 
 impl Unit {
     fn new(unit_type: UnitType) -> Self {
         Unit {
             unit_type,
-            move_target: None,
             hp: 200,
             damage: 3,
+            took_turn: false,
         }
     }
 }
@@ -203,7 +203,7 @@ fn update_target_if_in_reading_order(
     move_to_spot: &Coord,
 ) {
     let target_coord = distance_data.target_coord;
-    if new_coord.1 <= target_coord.1 || (new_coord.1 == target_coord.1 && new_coord.0 <= target_coord.0) {
+    if new_coord.1 < target_coord.1 || (new_coord.1 == target_coord.1 && new_coord.0 < target_coord.0) {
         update_distance_data(distance_data, new_coord, target_hp, move_to_spot);
     }
 }
@@ -227,17 +227,16 @@ fn get_shortest_path<'a>(paths: &'a mut Vec<Vec<Coord>>) -> Option<&'a Vec<Coord
         match a.len().cmp(&b.len()) {
             Ordering::Equal => {
                 // sort by comparing each coordinate
-                for (i, coord) in a.iter().enumerate() {
-                    let b_coord = b.get(i).unwrap();
-                    if coord != b_coord {
-                        return if coord.1 <= b_coord.1
-                            || (coord.1 == b_coord.1 && coord.0 <= b_coord.0)
-                        {
-                            Ordering::Less
-                        } else {
-                            Ordering::Greater
-                        };
-                    }
+                let first_coord_a = a.get(0).unwrap();
+                let first_coord_b = b.get(0).unwrap();
+                if first_coord_a != first_coord_b {
+                    return if first_coord_a.1 < first_coord_b.1
+                        || (first_coord_a.1 == first_coord_b.1 && first_coord_a.0 < first_coord_b.0)
+                    {
+                        Ordering::Less
+                    } else {
+                        Ordering::Greater
+                    };
                 }
                 Ordering::Equal
             }
@@ -295,7 +294,7 @@ fn attack(tiles: &mut Vec<Vec<TileType>>, target_units: &mut HashMap<Coord, Unit
         target_unit.hp <= 0
     };
     if dead {
-        println!("Removing unit from {:?}", target_unit_coord);
+        // println!("Removing unit from {:?}", target_unit_coord);
         *tiles
             .get_mut(target_unit_coord.1)
             .unwrap()
@@ -332,7 +331,6 @@ fn perform_move(
 
         sort_attack_targets(&mut attack_targets, target_units);
         let attack_target = attack_targets.get(0).unwrap();
-        println!("Attack from {:?} {:?} to {:?}", units.get(actioner_coord).unwrap(), actioner_coord, attack_target);
         attack(tiles, target_units, attack_target, units.get(actioner_coord).unwrap());
     }
     // make old spot open, and new one unpassable
@@ -377,10 +375,19 @@ fn print_tiles(
         print!("\n");
     }
     print!("\n");
+
+    for (coord, goblin) in goblins {
+        println!("{:?} - {:?}", coord, goblin);
+    }
+
+    for (coord, elf) in elves {
+        println!("{:?} - {:?}", coord, elf);
+    }
 }
 
 fn take_turn(empty_map: &HashSet<Coord>, tiles: &mut Vec<Vec<TileType>>, unit_collection: &mut HashMap<Coord, Unit>, targets: &mut HashMap<Coord, Unit>, unit_coord: &Coord, min_distance: &mut usize, distances: &mut HashMap<usize, SelectionData>) {
     let mut attack_targets = Vec::new();
+    unit_collection.get_mut(unit_coord).unwrap().took_turn = true;
     for (target_coord, target) in targets.iter_mut() {
         if target.hp == 0 {
             continue;
@@ -417,7 +424,6 @@ fn take_turn(empty_map: &HashSet<Coord>, tiles: &mut Vec<Vec<TileType>>, unit_co
         sort_attack_targets(&mut attack_targets, targets);
 
         let attack_target = attack_targets.get(0).unwrap();
-        println!("Attack from {:?} {:?} to {:?}", unit_collection.get(unit_coord).unwrap(), unit_coord, attack_target);
         attack(tiles, targets, attack_target, unit_collection.get(unit_coord).unwrap());
     } else {
         perform_move(
@@ -430,6 +436,28 @@ fn take_turn(empty_map: &HashSet<Coord>, tiles: &mut Vec<Vec<TileType>>, unit_co
             &distances,
         );
     }
+}
+
+fn did_elves_win(elves: &HashMap<Coord, Unit>, goblins: &HashMap<Coord, Unit>, rounds: i32) -> bool {
+    if goblins.len() == 0 {
+        let hp_sum = elves
+            .iter()
+            .fold(0, |sum, (_, elf)| sum + elf.hp);
+        println!("Elves win {} * {} = {}", rounds, hp_sum, rounds * hp_sum);
+        return true
+    }
+    false
+}
+
+fn did_goblins_win(elves: &HashMap<Coord, Unit>, goblins: &HashMap<Coord, Unit>, rounds: i32) -> bool {
+    if elves.len() == 0 {
+        let hp_sum = goblins
+            .iter()
+            .fold(0, |sum, (_, goblin)| sum + goblin.hp);
+        println!("Goblins win {} * {} = {}", rounds, hp_sum, rounds * hp_sum);
+        return true
+    }
+    false
 }
 
 fn main() {
@@ -461,28 +489,27 @@ fn main() {
 
     let mut rounds = 0;
 
-    print_tiles(&tiles, &goblins, &elves);
+    // print_tiles(&tiles, &goblins, &elves);
 
     // used for get_neighbours, for available spots around a target
     let empty_map: HashSet<Coord> = HashSet::new();
 
-    loop {
+    'main: loop {
+        if did_elves_win(&elves, &goblins, rounds) || did_goblins_win(&elves, &goblins, rounds) {
+            break
+        }
+
+        // these two loops update the took turn flag
+        for (_, elf) in &mut elves {
+            elf.took_turn = false;
+        }
+
+        for (_, goblin) in &mut goblins {
+            goblin.took_turn = false;
+        }
+
         let mut sorted_unit_coords = hash_map_coords_to_vec(&goblins);
         let mut sorted_elf_coords = hash_map_coords_to_vec(&elves);
-
-        if sorted_unit_coords.len() == 0 {
-            let hp_sum = sorted_elf_coords
-                .iter()
-                .fold(0, |sum, coord| sum + elves.get(coord).unwrap().hp);
-            println!("Elves win {} * {} = {}", rounds, hp_sum, rounds * hp_sum);
-            break;
-        } else if sorted_elf_coords.len() == 0 {
-            let hp_sum = sorted_unit_coords
-                .iter()
-                .fold(0, |sum, coord| sum + goblins.get(coord).unwrap().hp);
-            println!("Goblins win {} * {} = {}", rounds, hp_sum, rounds * hp_sum);
-            break;
-        }
 
         sorted_unit_coords.append(&mut sorted_elf_coords);
 
@@ -492,14 +519,29 @@ fn main() {
             let mut distances: HashMap<usize, SelectionData> = HashMap::new();
             let mut min_distance = 1000;
             if goblins.contains_key(coord) {
+                // if the goblin at this coord already took turn (due to a move), skip
+                if goblins.get(coord).unwrap().took_turn {
+                    continue
+                }
+                if did_goblins_win(&elves, &goblins, rounds) {
+                    break 'main
+                }
                 take_turn(&empty_map, &mut tiles, &mut goblins, &mut elves, &coord, &mut min_distance, &mut distances);
             } else if elves.contains_key(coord) {
+                // if the elve at this coord already took turn (due to a move), skip
+                if elves.get(coord).unwrap().took_turn {
+                    continue
+                }
+                if did_elves_win(&elves, &goblins, rounds) {
+                    break 'main
+                }
                 take_turn(&empty_map, &mut tiles, &mut elves, &mut goblins, &coord, &mut min_distance, &mut distances);
             }
         }
 
-        println!("{}", rounds + 1);
-        print_tiles(&tiles, &goblins, &elves);
+        // println!("{}", rounds + 1);
+        // print_tiles(&tiles, &goblins, &elves);
+
         rounds += 1;
     }
 }
