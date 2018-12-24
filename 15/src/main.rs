@@ -35,11 +35,11 @@ struct Unit {
 }
 
 impl Unit {
-    fn new(unit_type: UnitType) -> Self {
+    fn new(unit_type: UnitType, damage: i32) -> Self {
         Unit {
             unit_type,
             hp: 200,
-            damage: 3,
+            damage,
             took_turn: false,
         }
     }
@@ -59,7 +59,7 @@ struct FindNextData {
 
 impl FindNextData {
     fn new(scanned_coords: HashSet<Coord>, path: Vec<Coord>) -> Self {
-        FindNextData{
+        FindNextData {
             scanned_coords,
             path,
         }
@@ -71,8 +71,13 @@ impl FindNextData {
 }
 
 impl SelectionData {
-    fn new(target_coord: &Coord, hp: i32, move_to_coord: &Coord, target_unit_coord: &Coord) -> Self {
-        SelectionData{
+    fn new(
+        target_coord: &Coord,
+        hp: i32,
+        move_to_coord: &Coord,
+        target_unit_coord: &Coord,
+    ) -> Self {
+        SelectionData {
             target_coord: target_coord.clone(),
             hp,
             move_to_coord: move_to_coord.clone(),
@@ -103,32 +108,28 @@ pub fn get_neighbours(
     // we push coords in reading order
     if pos.1 > 0 && !scanned_coords.contains(&(pos.0, pos.1 - 1)) {
         let tile_type = &tiles[pos.1 - 1][pos.0];
-        if *tile_type == TileType::Open || *tile_type == TileType::Unit
-        {
+        if *tile_type == TileType::Open || *tile_type == TileType::Unit {
             neighbours.push((pos.0, pos.1 - 1, tile_type.clone()));
         }
     }
 
     if pos.0 > 0 && !scanned_coords.contains(&(pos.0 - 1, pos.1)) {
         let tile_type = &tiles[pos.1][pos.0 - 1];
-        if *tile_type == TileType::Open || *tile_type == TileType::Unit
-        {
+        if *tile_type == TileType::Open || *tile_type == TileType::Unit {
             neighbours.push((pos.0 - 1, pos.1, tile_type.clone()));
         }
     }
 
     if pos.0 < tiles[0].len() - 1 && !scanned_coords.contains(&(pos.0 + 1, pos.1)) {
         let tile_type = &tiles[pos.1][pos.0 + 1];
-        if *tile_type == TileType::Open || *tile_type == TileType::Unit
-        {
+        if *tile_type == TileType::Open || *tile_type == TileType::Unit {
             neighbours.push((pos.0 + 1, pos.1, tile_type.clone()));
         }
     }
 
     if pos.1 < tiles.len() - 1 && !scanned_coords.contains(&(pos.0, pos.1 + 1)) {
         let tile_type = &tiles[pos.1 + 1][pos.0];
-        if *tile_type == TileType::Open || *tile_type == TileType::Unit
-        {
+        if *tile_type == TileType::Open || *tile_type == TileType::Unit {
             neighbours.push((pos.0, pos.1 + 1, tile_type.clone()));
         }
     }
@@ -136,18 +137,16 @@ pub fn get_neighbours(
     neighbours
 }
 
-fn find_paths(
-    tiles: &Vec<Vec<TileType>>,
-    coord: &Coord,
-    target: &Coord,
-) -> Vec<Vec<Coord>> {
-
+fn find_paths(tiles: &Vec<Vec<TileType>>, coord: &Coord, target: &Coord) -> Vec<Vec<Coord>> {
     let mut scanned_coords = HashSet::new();
     scanned_coords.insert(coord.clone());
 
     let mut paths = Vec::new();
 
-    let mut stack = vec![FindNextData::new(scanned_coords.clone(), vec![coord.clone()])];
+    let mut stack = vec![FindNextData::new(
+        scanned_coords.clone(),
+        vec![coord.clone()],
+    )];
 
     let mut min_path_length = 10_000;
 
@@ -156,11 +155,11 @@ fn find_paths(
         if current.get_coord() == target {
             min_path_length = cmp::min(min_path_length, current.path.len());
             paths.push(current.path.clone());
-            continue
+            continue;
         }
 
         if current.path.len() > min_path_length {
-            break
+            break;
         }
 
         let neighbours = get_neighbours(&scanned_coords, current.get_coord(), tiles);
@@ -170,7 +169,7 @@ fn find_paths(
 
         for neighbour in &neighbours {
             if neighbour.2 == TileType::Unit {
-                continue
+                continue;
             }
             let neighbour = (neighbour.0, neighbour.1);
             let mut path = current.path.clone();
@@ -203,7 +202,9 @@ fn update_target_if_in_reading_order(
     move_to_spot: &Coord,
 ) {
     let target_coord = distance_data.target_coord;
-    if new_coord.1 < target_coord.1 || (new_coord.1 == target_coord.1 && new_coord.0 < target_coord.0) {
+    if new_coord.1 < target_coord.1
+        || (new_coord.1 == target_coord.1 && new_coord.0 < target_coord.0)
+    {
         update_distance_data(distance_data, new_coord, target_hp, move_to_spot);
     }
 }
@@ -262,7 +263,7 @@ fn select_target(
     let path = get_shortest_path(&mut paths);
 
     if path.is_none() {
-        return
+        return;
     }
 
     let path = path.unwrap();
@@ -282,12 +283,22 @@ fn select_target(
     } else {
         distances.insert(
             path.len(),
-            SelectionData::new(target_coord, target_unit.hp, &move_to_spot, target_unit_coord),
+            SelectionData::new(
+                target_coord,
+                target_unit.hp,
+                &move_to_spot,
+                target_unit_coord,
+            ),
         );
     }
 }
 
-fn attack(tiles: &mut Vec<Vec<TileType>>, target_units: &mut HashMap<Coord, Unit>, target_unit_coord: &Coord, actioner: &Unit) {
+fn attack(
+    tiles: &mut Vec<Vec<TileType>>,
+    target_units: &mut HashMap<Coord, Unit>,
+    target_unit_coord: &Coord,
+    actioner: &Unit,
+) -> bool {
     let dead = {
         let target_unit = target_units.get_mut(target_unit_coord).unwrap();
         target_unit.hp -= actioner.damage;
@@ -302,6 +313,8 @@ fn attack(tiles: &mut Vec<Vec<TileType>>, target_units: &mut HashMap<Coord, Unit
             .unwrap() = TileType::Open;
         target_units.remove(target_unit_coord);
     }
+
+    dead
 }
 
 fn perform_move(
@@ -312,26 +325,35 @@ fn perform_move(
     min_distance: &usize,
     target_units: &mut HashMap<Coord, Unit>,
     distances: &HashMap<usize, SelectionData>,
-) {
+) -> bool {
     if !distances.contains_key(&min_distance) {
-        return;
+        return false;
     }
     let distance_data = distances.get(min_distance).unwrap();
+    let mut unit_died = false;
     // if about to move into spot next to an enemy, do an attack
     if *min_distance <= 2 {
-        let mut attack_targets: Vec<Coord> = get_neighbours(empty_map, &distance_data.move_to_coord, tiles).iter().filter(|(x, y, tile_type)| {
-            if *tile_type == TileType::Unit {
-                target_units.contains_key(&(*x, *y))
-            } else {
-                false
-            }
-        }).map(|(x, y, _)| {
-            (*x, *y)
-        }).collect();
+        let mut attack_targets: Vec<Coord> =
+            get_neighbours(empty_map, &distance_data.move_to_coord, tiles)
+                .iter()
+                .filter(|(x, y, tile_type)| {
+                    if *tile_type == TileType::Unit {
+                        target_units.contains_key(&(*x, *y))
+                    } else {
+                        false
+                    }
+                })
+                .map(|(x, y, _)| (*x, *y))
+                .collect();
 
         sort_attack_targets(&mut attack_targets, target_units);
         let attack_target = attack_targets.get(0).unwrap();
-        attack(tiles, target_units, attack_target, units.get(actioner_coord).unwrap());
+        unit_died = attack(
+            tiles,
+            target_units,
+            attack_target,
+            units.get(actioner_coord).unwrap(),
+        );
     }
     // make old spot open, and new one unpassable
     *tiles
@@ -349,6 +371,8 @@ fn perform_move(
     let actioner: Unit = units.get(actioner_coord).unwrap().to_owned();
     units.insert(move_to_coord.clone(), actioner);
     units.remove(actioner_coord).unwrap();
+
+    unit_died
 }
 
 fn print_tiles(
@@ -385,7 +409,15 @@ fn print_tiles(
     }
 }
 
-fn take_turn(empty_map: &HashSet<Coord>, tiles: &mut Vec<Vec<TileType>>, unit_collection: &mut HashMap<Coord, Unit>, targets: &mut HashMap<Coord, Unit>, unit_coord: &Coord, min_distance: &mut usize, distances: &mut HashMap<usize, SelectionData>) {
+fn take_turn(
+    empty_map: &HashSet<Coord>,
+    tiles: &mut Vec<Vec<TileType>>,
+    unit_collection: &mut HashMap<Coord, Unit>,
+    targets: &mut HashMap<Coord, Unit>,
+    unit_coord: &Coord,
+    min_distance: &mut usize,
+    distances: &mut HashMap<usize, SelectionData>,
+) -> bool {
     let mut attack_targets = Vec::new();
     unit_collection.get_mut(unit_coord).unwrap().took_turn = true;
     for (target_coord, target) in targets.iter_mut() {
@@ -398,12 +430,12 @@ fn take_turn(empty_map: &HashSet<Coord>, tiles: &mut Vec<Vec<TileType>>, unit_co
             // if unit is next to a target ATTACK!!!!!!!!!! ⚔️
             if (neighbour.0, neighbour.1) == *unit_coord && neighbour.2 == TileType::Unit {
                 attack_targets.push(target_coord.clone());
-                break
+                break;
             }
 
             // no need to do expensive path finding
             if attack_targets.len() > 0 {
-                continue
+                continue;
             }
 
             if neighbour.2 == TileType::Open {
@@ -420,11 +452,18 @@ fn take_turn(empty_map: &HashSet<Coord>, tiles: &mut Vec<Vec<TileType>>, unit_co
         }
     }
 
+    let mut unit_died = false;
+
     if attack_targets.len() > 0 {
         sort_attack_targets(&mut attack_targets, targets);
 
         let attack_target = attack_targets.get(0).unwrap();
-        attack(tiles, targets, attack_target, unit_collection.get(unit_coord).unwrap());
+        unit_died = attack(
+            tiles,
+            targets,
+            attack_target,
+            unit_collection.get(unit_coord).unwrap(),
+        );
     } else {
         perform_move(
             tiles,
@@ -436,32 +475,37 @@ fn take_turn(empty_map: &HashSet<Coord>, tiles: &mut Vec<Vec<TileType>>, unit_co
             &distances,
         );
     }
+
+    unit_died
 }
 
-fn did_elves_win(elves: &HashMap<Coord, Unit>, goblins: &HashMap<Coord, Unit>, rounds: i32) -> bool {
+fn did_elves_win(
+    elves: &HashMap<Coord, Unit>,
+    goblins: &HashMap<Coord, Unit>,
+    rounds: i32,
+) -> bool {
     if goblins.len() == 0 {
-        let hp_sum = elves
-            .iter()
-            .fold(0, |sum, (_, elf)| sum + elf.hp);
+        let hp_sum = elves.iter().fold(0, |sum, (_, elf)| sum + elf.hp);
         println!("Elves win {} * {} = {}", rounds, hp_sum, rounds * hp_sum);
-        return true
+        return true;
     }
     false
 }
 
-fn did_goblins_win(elves: &HashMap<Coord, Unit>, goblins: &HashMap<Coord, Unit>, rounds: i32) -> bool {
+fn did_goblins_win(
+    elves: &HashMap<Coord, Unit>,
+    goblins: &HashMap<Coord, Unit>,
+    rounds: i32,
+) -> bool {
     if elves.len() == 0 {
-        let hp_sum = goblins
-            .iter()
-            .fold(0, |sum, (_, goblin)| sum + goblin.hp);
+        let hp_sum = goblins.iter().fold(0, |sum, (_, goblin)| sum + goblin.hp);
         println!("Goblins win {} * {} = {}", rounds, hp_sum, rounds * hp_sum);
-        return true
+        return true;
     }
     false
 }
 
-fn main() {
-    let text = read_input::read_text("15/input.txt").unwrap();
+fn run_game(text: &String, elf_damage: i32, elves_must_win: bool) -> bool {
     let mut tiles: Vec<Vec<TileType>> = Vec::new();
 
     let mut goblins = HashMap::new();
@@ -478,9 +522,9 @@ fn main() {
             });
 
             if ch == 'G' {
-                goblins.insert((x, y), Unit::new(UnitType::Goblin));
+                goblins.insert((x, y), Unit::new(UnitType::Goblin, 3));
             } else if ch == 'E' {
-                elves.insert((x, y), Unit::new(UnitType::Elf));
+                elves.insert((x, y), Unit::new(UnitType::Elf, elf_damage));
             }
         }
 
@@ -493,10 +537,14 @@ fn main() {
 
     // used for get_neighbours, for available spots around a target
     let empty_map: HashSet<Coord> = HashSet::new();
+    let mut elves_won = false;
 
     'main: loop {
-        if did_elves_win(&elves, &goblins, rounds) || did_goblins_win(&elves, &goblins, rounds) {
-            break
+        if did_elves_win(&elves, &goblins, rounds) {
+            elves_won = true;
+            break;
+        } else if did_goblins_win(&elves, &goblins, rounds) {
+            break;
         }
 
         // these two loops update the took turn flag
@@ -521,21 +569,42 @@ fn main() {
             if goblins.contains_key(coord) {
                 // if the goblin at this coord already took turn (due to a move), skip
                 if goblins.get(coord).unwrap().took_turn {
-                    continue
+                    continue;
                 }
                 if did_goblins_win(&elves, &goblins, rounds) {
-                    break 'main
+                    break 'main;
                 }
-                take_turn(&empty_map, &mut tiles, &mut goblins, &mut elves, &coord, &mut min_distance, &mut distances);
+                let unit_died = take_turn(
+                    &empty_map,
+                    &mut tiles,
+                    &mut goblins,
+                    &mut elves,
+                    &coord,
+                    &mut min_distance,
+                    &mut distances,
+                );
+
+                if unit_died && elves_must_win {
+                    return false
+                }
             } else if elves.contains_key(coord) {
                 // if the elve at this coord already took turn (due to a move), skip
                 if elves.get(coord).unwrap().took_turn {
-                    continue
+                    continue;
                 }
                 if did_elves_win(&elves, &goblins, rounds) {
-                    break 'main
+                    elves_won = true;
+                    break 'main;
                 }
-                take_turn(&empty_map, &mut tiles, &mut elves, &mut goblins, &coord, &mut min_distance, &mut distances);
+                take_turn(
+                    &empty_map,
+                    &mut tiles,
+                    &mut elves,
+                    &mut goblins,
+                    &coord,
+                    &mut min_distance,
+                    &mut distances,
+                );
             }
         }
 
@@ -543,6 +612,35 @@ fn main() {
         // print_tiles(&tiles, &goblins, &elves);
 
         rounds += 1;
+    }
+
+    elves_won
+}
+
+fn main() {
+    let text = read_input::read_text("15/input.txt").unwrap();
+    run_game(&text, 3, false);
+
+    let mut damage_rate = 20;
+    let mut damage = damage_rate;
+    let mut last_damage = 0;
+    let mut last_outcome_loss = true;
+    loop {
+        println!("Trying {}", damage);
+        if run_game(&text, damage, true) {
+            if last_damage + 1 == damage && last_outcome_loss {
+                break
+            }
+            last_outcome_loss = false;
+            // try half way between last two damage points
+            damage = (damage - last_damage) / 2 + last_damage;
+            // next damage rate should be half of current
+            damage_rate = (damage - last_damage) / 2 / 2;
+        } else {
+            last_damage = damage;
+            damage += damage_rate;
+            last_outcome_loss = true;
+        }
     }
 }
 
@@ -553,10 +651,42 @@ mod tests {
     #[test]
     fn test_path_generation() {
         let tiles = vec![
-            vec![TileType::Unpassable, TileType::Unpassable, TileType::Unpassable, TileType::Unpassable, TileType::Unpassable, TileType::Unpassable, TileType::Unpassable],
-            vec![TileType::Unpassable, TileType::Open, TileType::Unit, TileType::Open, TileType::Open, TileType::Open, TileType::Unpassable],
-            vec![TileType::Unpassable, TileType::Open, TileType::Open, TileType::Open, TileType::Unit, TileType::Unit, TileType::Unpassable],
-            vec![TileType::Unpassable, TileType::Open, TileType::Unpassable, TileType::Open, TileType::Unpassable, TileType::Unit, TileType::Unpassable],
+            vec![
+                TileType::Unpassable,
+                TileType::Unpassable,
+                TileType::Unpassable,
+                TileType::Unpassable,
+                TileType::Unpassable,
+                TileType::Unpassable,
+                TileType::Unpassable,
+            ],
+            vec![
+                TileType::Unpassable,
+                TileType::Open,
+                TileType::Unit,
+                TileType::Open,
+                TileType::Open,
+                TileType::Open,
+                TileType::Unpassable,
+            ],
+            vec![
+                TileType::Unpassable,
+                TileType::Open,
+                TileType::Open,
+                TileType::Open,
+                TileType::Unit,
+                TileType::Unit,
+                TileType::Unpassable,
+            ],
+            vec![
+                TileType::Unpassable,
+                TileType::Open,
+                TileType::Unpassable,
+                TileType::Open,
+                TileType::Unpassable,
+                TileType::Unit,
+                TileType::Unpassable,
+            ],
         ];
 
         let mut paths = find_paths(&tiles, &(2, 1), &(4, 1));
