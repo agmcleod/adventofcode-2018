@@ -73,13 +73,17 @@ fn main() {
         part_one_state = result.0;
     }
 
-    let sum_of_pots_containing_plants = part_one_state.iter().fold(0, |sum, (i, pot)| {
-        if *pot == "#" {
-            sum + i
-        } else {
-            sum + 0
-        }
-    });
+    let sum_of_pots_containing_plants =
+        part_one_state.iter().fold(
+            0,
+            |sum, (i, pot)| {
+                if *pot == "#" {
+                    sum + i
+                } else {
+                    sum + 0
+                }
+            },
+        );
 
     println!("{}", sum_of_pots_containing_plants);
 

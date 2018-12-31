@@ -585,7 +585,7 @@ fn run_game(text: &String, elf_damage: i32, elves_must_win: bool) -> bool {
                 );
 
                 if unit_died && elves_must_win {
-                    return false
+                    return false;
                 }
             } else if elves.contains_key(coord) {
                 // if the elve at this coord already took turn (due to a move), skip
@@ -629,7 +629,7 @@ fn main() {
         println!("Trying {}", damage);
         if run_game(&text, damage, true) {
             if last_damage + 1 == damage && last_outcome_loss {
-                break
+                break;
             }
             last_outcome_loss = false;
             // try half way between last two damage points

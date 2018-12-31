@@ -1,12 +1,16 @@
 extern crate read_input;
 
-use std::collections::{HashSet, HashMap};
 use std::cmp;
+use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::io::Write;
 
 fn get_range_numbers(second_coord: &str, coord_name: &str) -> Vec<i32> {
-    second_coord.replace(coord_name, "").split("..").map(|v| v.parse().unwrap()).collect()
+    second_coord
+        .replace(coord_name, "")
+        .split("..")
+        .map(|v| v.parse().unwrap())
+        .collect()
 }
 
 fn add_element_for_key_to_map(map: &mut HashMap<i32, Vec<i32>>, key: i32, element: i32) {
@@ -19,7 +23,15 @@ fn add_element_for_key_to_map(map: &mut HashMap<i32, Vec<i32>>, key: i32, elemen
     }
 }
 
-fn write_map(file_path: &str, deepest_clay: i32, min_x: i32, max_x: i32, full_clay_map: &HashSet<(i32, i32)>, watered_area: &HashSet<(i32, i32)>, falling_water: &HashSet<(i32, i32)>) {
+fn write_map(
+    file_path: &str,
+    deepest_clay: i32,
+    min_x: i32,
+    max_x: i32,
+    full_clay_map: &HashSet<(i32, i32)>,
+    watered_area: &HashSet<(i32, i32)>,
+    falling_water: &HashSet<(i32, i32)>,
+) {
     let mut f = File::create(file_path).unwrap();
     let mut lines = Vec::new();
     for y in 0..=deepest_clay {
@@ -30,7 +42,7 @@ fn write_map(file_path: &str, deepest_clay: i32, min_x: i32, max_x: i32, full_cl
                     line.push(".");
                 } else {
                     line.push("500");
-                    break
+                    break;
                 }
             }
         } else {
@@ -104,7 +116,15 @@ fn main() {
     let mut falling_water = HashSet::new();
     let mut failing_vectors = HashSet::new();
 
-    write_map("17/claymap.txt", deepest_clay, min_x, max_x, &full_clay_map, &watered_area, &falling_water);
+    write_map(
+        "17/claymap.txt",
+        deepest_clay,
+        min_x,
+        max_x,
+        &full_clay_map,
+        &watered_area,
+        &falling_water,
+    );
 
     loop {
         if let Some(mut vec) = current_vector.pop() {
@@ -135,13 +155,16 @@ fn main() {
                             // next space is above no space
                             // this assumes that a wall is always above another clay tile
                             // also checks if tile below is not water
-                            if min_x <= last_min && !full_clay_map.contains(&(min_x, vec.1 + 1)) && !watered_area.contains(&(min_x, vec.1 + 1)) {
+                            if min_x <= last_min
+                                && !full_clay_map.contains(&(min_x, vec.1 + 1))
+                                && !watered_area.contains(&(min_x, vec.1 + 1))
+                            {
                                 // since there's no ground start this as a new stream
                                 if !failing_vectors.contains(&(min_x, vec.1)) {
                                     current_vector.push((min_x, vec.1));
                                 }
                                 last_min = min_x;
-                                break
+                                break;
                             // min x is now a clay wall
                             } else if full_clay_map.contains(&(min_x, vec.1)) {
                                 // we dont add the + 1 here, as we want to include the claywall space
@@ -149,27 +172,30 @@ fn main() {
                                 // we add one back, because the clay is in that spot
                                 min_x += 1;
                                 clay_walls_found += 1;
-                                break
+                                break;
                             }
                             min_x -= 1;
                         }
 
                         let mut max_x = vec.0 + 1;
                         loop {
-                            if max_x >= last_max && !full_clay_map.contains(&(max_x, vec.1 + 1)) && !watered_area.contains(&(max_x, vec.1 + 1)) {
+                            if max_x >= last_max
+                                && !full_clay_map.contains(&(max_x, vec.1 + 1))
+                                && !watered_area.contains(&(max_x, vec.1 + 1))
+                            {
                                 // since there's no ground start this as a new stream
                                 if !failing_vectors.contains(&(max_x, vec.1)) {
                                     current_vector.push((max_x, vec.1));
                                 }
                                 last_max = max_x;
-                                break
+                                break;
                             } else if full_clay_map.contains(&(max_x, vec.1)) {
                                 // we dont subtract the 1 here, as we want to include the claywall space
                                 last_max = max_x;
                                 // subtract one in this case, dont count the clay wall!
                                 max_x -= 1;
                                 clay_walls_found += 1;
-                                break
+                                break;
                             }
                             max_x += 1;
                         }
@@ -180,13 +206,12 @@ fn main() {
                             } else {
                                 falling_water.insert((x, vec.1));
                             }
-
                         }
 
                         if clay_walls_found == 2 {
                             vec.1 -= 1;
                         } else {
-                            break 'scale_walls
+                            break 'scale_walls;
                         }
                     }
                 }
@@ -197,7 +222,7 @@ fn main() {
                 }
             }
         } else {
-            break
+            break;
         }
     }
 
@@ -211,5 +236,13 @@ fn main() {
     });
     let sum = falling_water.len() + watered_area_sum;
     println!("{} - {}", sum, watered_area.len());
-    write_map("17/claymap-full.txt", deepest_clay, min_x, max_x, &full_clay_map, &watered_area, &falling_water);
+    write_map(
+        "17/claymap-full.txt",
+        deepest_clay,
+        min_x,
+        max_x,
+        &full_clay_map,
+        &watered_area,
+        &falling_water,
+    );
 }

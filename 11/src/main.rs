@@ -22,7 +22,8 @@ fn create_sum_area_table(size: i32) -> HashMap<(i32, i32), i32> {
     let mut sum_area_table = HashMap::new();
     for x in 1..=size {
         for y in 1..=size {
-            let sum = get_power(x, y) + get_value_to_add(&sum_area_table, x, y - 1)
+            let sum = get_power(x, y)
+                + get_value_to_add(&sum_area_table, x, y - 1)
                 + get_value_to_add(&sum_area_table, x - 1, y)
                 - get_value_to_add(&sum_area_table, x - 1, y - 1);
             sum_area_table.insert((x, y), sum);

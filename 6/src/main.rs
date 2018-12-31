@@ -44,7 +44,8 @@ fn main() {
 
             if distances
                 .iter()
-                .fold(0, |sum, (_, distance)| sum + distance) < 10_000
+                .fold(0, |sum, (_, distance)| sum + distance)
+                < 10_000
             {
                 reachable_within_10k += 1;
             }

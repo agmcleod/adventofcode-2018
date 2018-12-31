@@ -38,7 +38,8 @@ fn apply_polymers(mut letters: Vec<&str>) -> usize {
 fn main() {
     let text = read_input::read_text("5/input.txt").unwrap();
     let mut letter_set = HashSet::new();
-    let letters: Vec<&str> = text.split("")
+    let letters: Vec<&str> = text
+        .split("")
         .filter(|v| *v != "" && *v != "\n")
         .map(|letter| {
             letter_set.insert(letter.to_lowercase());

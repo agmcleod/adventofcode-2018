@@ -65,19 +65,29 @@ fn main() {
             let adjacents = get_adjacents(&grid, coord);
             match tile_type {
                 Tile::Open => {
-                    if adjacents.iter().filter(|ttype| **ttype == Tile::Trees).count() >= 3 {
+                    if adjacents
+                        .iter()
+                        .filter(|ttype| **ttype == Tile::Trees)
+                        .count()
+                        >= 3
+                    {
                         next_state.insert(coord.clone(), Tile::Trees);
                     } else {
                         next_state.insert(coord.clone(), Tile::Open);
                     }
-                },
+                }
                 Tile::Trees => {
-                    if adjacents.iter().filter(|ttype| **ttype == Tile::LumberYard).count() >= 3 {
+                    if adjacents
+                        .iter()
+                        .filter(|ttype| **ttype == Tile::LumberYard)
+                        .count()
+                        >= 3
+                    {
                         next_state.insert(coord.clone(), Tile::LumberYard);
                     } else {
                         next_state.insert(coord.clone(), Tile::Trees);
                     }
-                },
+                }
                 Tile::LumberYard => {
                     let mut lumber_count = 0;
                     let mut trees_count = 0;
@@ -94,7 +104,7 @@ fn main() {
                     } else {
                         next_state.insert(coord.clone(), Tile::Open);
                     }
-                },
+                }
             }
         }
 
@@ -105,7 +115,9 @@ fn main() {
             let index = states_to_index.get(&flattened_state).unwrap();
             // some math i ended up trying, with a mix of things i read on reddit.
             // subtracting an extra 1 from the original loop index to account for zero indexing.
-            let state: &String = list_of_states.get(((1_000_000_000 - index - 1) % (i - index) + index) as usize).unwrap();
+            let state: &String = list_of_states
+                .get(((1_000_000_000 - index - 1) % (i - index) + index) as usize)
+                .unwrap();
             let mut lumber_count = 0;
             let mut trees_count = 0;
 
@@ -116,8 +128,13 @@ fn main() {
                     lumber_count += 1;
                 }
             }
-            println!("Part two: {} * {} = {}", trees_count, lumber_count, trees_count * lumber_count);
-            break
+            println!(
+                "Part two: {} * {} = {}",
+                trees_count,
+                lumber_count,
+                trees_count * lumber_count
+            );
+            break;
         } else if i == 9 {
             let mut lumber_count = 0;
             let mut trees_count = 0;
@@ -130,7 +147,12 @@ fn main() {
                 }
             }
 
-            println!("Part one: {} * {} = {}", trees_count, lumber_count, trees_count * lumber_count);
+            println!(
+                "Part one: {} * {} = {}",
+                trees_count,
+                lumber_count,
+                trees_count * lumber_count
+            );
         }
 
         states_to_index.insert(flattened_state.clone(), i);

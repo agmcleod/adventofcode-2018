@@ -42,7 +42,8 @@ fn main() {
                 // going backwards, it matches the number
                 if recipes
                     .get(recipes_length - i - reverse_index_offset)
-                    .unwrap() == digit
+                    .unwrap()
+                    == digit
                 {
                     // if its the last index of the digits, we found our input in the scoreboard
                     if i == digits.len() - 1 {

@@ -119,7 +119,8 @@ fn main() {
         let mut timestamp = timestamp.split(" ");
         let date = timestamp.next().unwrap().to_string();
         let time = timestamp.next().unwrap();
-        let time = time.split(":")
+        let time = time
+            .split(":")
             .nth(1)
             .unwrap()
             .parse()

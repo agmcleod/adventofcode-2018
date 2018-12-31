@@ -105,7 +105,7 @@ fn registers_equal(registers: &Vec<usize>, expected: &Vec<usize>) -> bool {
     for (i, value) in registers.iter().enumerate() {
         if value != expected.get(i).unwrap() {
             equal = false;
-            break
+            break;
         }
     }
 
@@ -138,56 +138,96 @@ fn main() {
         let mut operation_count = 0;
 
         let mut state_to_try = before.clone();
-        addi(&mut state_to_try, instruction[1], instruction[2], instruction[3]);
+        addi(
+            &mut state_to_try,
+            instruction[1],
+            instruction[2],
+            instruction[3],
+        );
         if registers_equal(&state_to_try, &after) {
             operation_count += 1;
             opps_for_code.insert("addi");
         }
 
         let mut state_to_try = before.clone();
-        addr(&mut state_to_try, instruction[1], instruction[2], instruction[3]);
+        addr(
+            &mut state_to_try,
+            instruction[1],
+            instruction[2],
+            instruction[3],
+        );
         if registers_equal(&state_to_try, &after) {
             operation_count += 1;
             opps_for_code.insert("addr");
         }
 
         let mut state_to_try = before.clone();
-        mulr(&mut state_to_try, instruction[1], instruction[2], instruction[3]);
+        mulr(
+            &mut state_to_try,
+            instruction[1],
+            instruction[2],
+            instruction[3],
+        );
         if registers_equal(&state_to_try, &after) {
             operation_count += 1;
             opps_for_code.insert("mulr");
         }
 
         let mut state_to_try = before.clone();
-        muli(&mut state_to_try, instruction[1], instruction[2], instruction[3]);
+        muli(
+            &mut state_to_try,
+            instruction[1],
+            instruction[2],
+            instruction[3],
+        );
         if registers_equal(&state_to_try, &after) {
             operation_count += 1;
             opps_for_code.insert("muli");
         }
 
         let mut state_to_try = before.clone();
-        banr(&mut state_to_try, instruction[1], instruction[2], instruction[3]);
+        banr(
+            &mut state_to_try,
+            instruction[1],
+            instruction[2],
+            instruction[3],
+        );
         if registers_equal(&state_to_try, &after) {
             operation_count += 1;
             opps_for_code.insert("banr");
         }
 
         let mut state_to_try = before.clone();
-        bani(&mut state_to_try, instruction[1], instruction[2], instruction[3]);
+        bani(
+            &mut state_to_try,
+            instruction[1],
+            instruction[2],
+            instruction[3],
+        );
         if registers_equal(&state_to_try, &after) {
             operation_count += 1;
             opps_for_code.insert("bani");
         }
 
         let mut state_to_try = before.clone();
-        borr(&mut state_to_try, instruction[1], instruction[2], instruction[3]);
+        borr(
+            &mut state_to_try,
+            instruction[1],
+            instruction[2],
+            instruction[3],
+        );
         if registers_equal(&state_to_try, &after) {
             operation_count += 1;
             opps_for_code.insert("borr");
         }
 
         let mut state_to_try = before.clone();
-        bori(&mut state_to_try, instruction[1], instruction[2], instruction[3]);
+        bori(
+            &mut state_to_try,
+            instruction[1],
+            instruction[2],
+            instruction[3],
+        );
         if registers_equal(&state_to_try, &after) {
             operation_count += 1;
             opps_for_code.insert("bori");
@@ -208,42 +248,72 @@ fn main() {
         }
 
         let mut state_to_try = before.clone();
-        gtir(&mut state_to_try, instruction[1], instruction[2], instruction[3]);
+        gtir(
+            &mut state_to_try,
+            instruction[1],
+            instruction[2],
+            instruction[3],
+        );
         if registers_equal(&state_to_try, &after) {
             operation_count += 1;
             opps_for_code.insert("gtir");
         }
 
         let mut state_to_try = before.clone();
-        gtri(&mut state_to_try, instruction[1], instruction[2], instruction[3]);
+        gtri(
+            &mut state_to_try,
+            instruction[1],
+            instruction[2],
+            instruction[3],
+        );
         if registers_equal(&state_to_try, &after) {
             operation_count += 1;
             opps_for_code.insert("gtri");
         }
 
         let mut state_to_try = before.clone();
-        gtrr(&mut state_to_try, instruction[1], instruction[2], instruction[3]);
+        gtrr(
+            &mut state_to_try,
+            instruction[1],
+            instruction[2],
+            instruction[3],
+        );
         if registers_equal(&state_to_try, &after) {
             operation_count += 1;
             opps_for_code.insert("gtrr");
         }
 
         let mut state_to_try = before.clone();
-        eqir(&mut state_to_try, instruction[1], instruction[2], instruction[3]);
+        eqir(
+            &mut state_to_try,
+            instruction[1],
+            instruction[2],
+            instruction[3],
+        );
         if registers_equal(&state_to_try, &after) {
             operation_count += 1;
             opps_for_code.insert("eqir");
         }
 
         let mut state_to_try = before.clone();
-        eqri(&mut state_to_try, instruction[1], instruction[2], instruction[3]);
+        eqri(
+            &mut state_to_try,
+            instruction[1],
+            instruction[2],
+            instruction[3],
+        );
         if registers_equal(&state_to_try, &after) {
             operation_count += 1;
             opps_for_code.insert("eqri");
         }
 
         let mut state_to_try = before.clone();
-        eqrr(&mut state_to_try, instruction[1], instruction[2], instruction[3]);
+        eqrr(
+            &mut state_to_try,
+            instruction[1],
+            instruction[2],
+            instruction[3],
+        );
         if registers_equal(&state_to_try, &after) {
             operation_count += 1;
             opps_for_code.insert("eqrr");
@@ -266,7 +336,10 @@ fn main() {
 
             operations.insert(instruction[0], current_ops_for_opcode);
         } else {
-            operations.insert(instruction[0], opps_for_code.iter().map(|k| k).cloned().collect());
+            operations.insert(
+                instruction[0],
+                opps_for_code.iter().map(|k| k).cloned().collect(),
+            );
         }
     }
 
@@ -280,7 +353,7 @@ fn main() {
                 let operation_name = operations.get(0).unwrap().to_string();
                 operation_codes.insert(code.clone(), operation_name.clone());
                 code_found = Some((code.clone(), operation_name));
-                break
+                break;
             }
         }
 
@@ -294,7 +367,7 @@ fn main() {
         }
 
         if operations.len() == 0 {
-            break
+            break;
         }
     }
 
@@ -303,7 +376,8 @@ fn main() {
     let mut registers = vec![0, 0, 0, 0];
 
     for instruction in instructions.lines() {
-        let instruction_numbers: Vec<usize> = instruction.split(" ").map(|n| n.parse().unwrap()).collect();
+        let instruction_numbers: Vec<usize> =
+            instruction.split(" ").map(|n| n.parse().unwrap()).collect();
 
         if !operation_codes.contains_key(&instruction_numbers[0]) {
             panic!("Missing instruction for: {}", instruction_numbers[0]);
@@ -312,53 +386,131 @@ fn main() {
 
         match operation_name.as_ref() {
             "addr" => {
-                addr(&mut registers, instruction_numbers[1], instruction_numbers[2], instruction_numbers[3]);
-            },
+                addr(
+                    &mut registers,
+                    instruction_numbers[1],
+                    instruction_numbers[2],
+                    instruction_numbers[3],
+                );
+            }
             "addi" => {
-                addi(&mut registers, instruction_numbers[1], instruction_numbers[2], instruction_numbers[3]);
-            },
+                addi(
+                    &mut registers,
+                    instruction_numbers[1],
+                    instruction_numbers[2],
+                    instruction_numbers[3],
+                );
+            }
             "mulr" => {
-                mulr(&mut registers, instruction_numbers[1], instruction_numbers[2], instruction_numbers[3]);
-            },
+                mulr(
+                    &mut registers,
+                    instruction_numbers[1],
+                    instruction_numbers[2],
+                    instruction_numbers[3],
+                );
+            }
             "muli" => {
-                muli(&mut registers, instruction_numbers[1], instruction_numbers[2], instruction_numbers[3]);
-            },
+                muli(
+                    &mut registers,
+                    instruction_numbers[1],
+                    instruction_numbers[2],
+                    instruction_numbers[3],
+                );
+            }
             "banr" => {
-                banr(&mut registers, instruction_numbers[1], instruction_numbers[2], instruction_numbers[3]);
-            },
+                banr(
+                    &mut registers,
+                    instruction_numbers[1],
+                    instruction_numbers[2],
+                    instruction_numbers[3],
+                );
+            }
             "bani" => {
-                bani(&mut registers, instruction_numbers[1], instruction_numbers[2], instruction_numbers[3]);
-            },
+                bani(
+                    &mut registers,
+                    instruction_numbers[1],
+                    instruction_numbers[2],
+                    instruction_numbers[3],
+                );
+            }
             "borr" => {
-                borr(&mut registers, instruction_numbers[1], instruction_numbers[2], instruction_numbers[3]);
-            },
+                borr(
+                    &mut registers,
+                    instruction_numbers[1],
+                    instruction_numbers[2],
+                    instruction_numbers[3],
+                );
+            }
             "bori" => {
-                bori(&mut registers, instruction_numbers[1], instruction_numbers[2], instruction_numbers[3]);
-            },
+                bori(
+                    &mut registers,
+                    instruction_numbers[1],
+                    instruction_numbers[2],
+                    instruction_numbers[3],
+                );
+            }
             "setr" => {
-                setr(&mut registers, instruction_numbers[1], instruction_numbers[3]);
-            },
+                setr(
+                    &mut registers,
+                    instruction_numbers[1],
+                    instruction_numbers[3],
+                );
+            }
             "seti" => {
-                seti(&mut registers, instruction_numbers[1], instruction_numbers[3]);
-            },
+                seti(
+                    &mut registers,
+                    instruction_numbers[1],
+                    instruction_numbers[3],
+                );
+            }
             "gtir" => {
-                gtir(&mut registers, instruction_numbers[1], instruction_numbers[2], instruction_numbers[3]);
-            },
+                gtir(
+                    &mut registers,
+                    instruction_numbers[1],
+                    instruction_numbers[2],
+                    instruction_numbers[3],
+                );
+            }
             "gtri" => {
-                gtri(&mut registers, instruction_numbers[1], instruction_numbers[2], instruction_numbers[3]);
-            },
+                gtri(
+                    &mut registers,
+                    instruction_numbers[1],
+                    instruction_numbers[2],
+                    instruction_numbers[3],
+                );
+            }
             "gtrr" => {
-                gtrr(&mut registers, instruction_numbers[1], instruction_numbers[2], instruction_numbers[3]);
-            },
+                gtrr(
+                    &mut registers,
+                    instruction_numbers[1],
+                    instruction_numbers[2],
+                    instruction_numbers[3],
+                );
+            }
             "eqir" => {
-                eqir(&mut registers, instruction_numbers[1], instruction_numbers[2], instruction_numbers[3]);
-            },
+                eqir(
+                    &mut registers,
+                    instruction_numbers[1],
+                    instruction_numbers[2],
+                    instruction_numbers[3],
+                );
+            }
             "eqri" => {
-                eqri(&mut registers, instruction_numbers[1], instruction_numbers[2], instruction_numbers[3]);
-            },
+                eqri(
+                    &mut registers,
+                    instruction_numbers[1],
+                    instruction_numbers[2],
+                    instruction_numbers[3],
+                );
+            }
             "eqrr" => {
-                eqrr(&mut registers, instruction_numbers[1], instruction_numbers[2], instruction_numbers[3]);
-            },
+                eqrr(
+                    &mut registers,
+                    instruction_numbers[1],
+                    instruction_numbers[2],
+                    instruction_numbers[3],
+                );
+            }
             _ => panic!("Unrecognized operation {}", operation_name),
         }
     }

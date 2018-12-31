@@ -47,9 +47,11 @@ fn add_counts_to_map(map: &mut HashMap<i32, usize>, value: i32) {
 
 fn main() {
     let text = read_input::read_text("10/input.txt").unwrap();
-    let mut specs: Vec<Spec> = text.lines()
+    let mut specs: Vec<Spec> = text
+        .lines()
         .map(|line| {
-            let line = line.replace(" ", "")
+            let line = line
+                .replace(" ", "")
                 .replace(">", "")
                 .replace("position=<", "");
             let mut iter = line.split("velocity=<");

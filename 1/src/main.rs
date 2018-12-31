@@ -5,7 +5,8 @@ use std::collections::HashSet;
 fn main() {
     let text = read_input::read_text("1/input.txt").unwrap();
 
-    let nums: Vec<i32> = text.lines()
+    let nums: Vec<i32> = text
+        .lines()
         .map(|line| line.parse().expect("Could not parse"))
         .collect();
     let sum = nums.iter().fold(0, |n, v| n + v);
