@@ -64,6 +64,40 @@ fn get_opposite(direction: &Direction) -> Direction {
     }
 }
 
+fn draw_map(map: &HashMap<Coord, Room>, min_x: i32, min_y: i32, max_x: i32, max_y: i32) {
+    for y in min_y..=max_y {
+        // above room line
+        for x in min_x..=max_x {
+            print!("#");
+            if let Some(room) = map.get(&(x, y)) {
+                if room.doors.contains(&Direction::North) {
+                    print!("-");
+                } else {
+                    print!("#");
+                }
+            } else {
+                print!("#");
+            }
+        }
+
+        // room line
+        print!("\n");
+        for x in min_x..=max_x {
+            if let Some(room) = map.get(&(x, y)) {
+                if room.doors.contains(&Direction::West) {
+                    print!("|");
+                } else {
+                    print!("#");
+                }
+                print!(".");
+            } else {
+                print!("##");
+            }
+        }
+        print!("\n");
+    }
+}
+
 fn main() {
     let text = read_input::read_text("20/example2.txt").unwrap();
     let text = text.replace("^", "").replace("$", "");
@@ -123,35 +157,5 @@ fn main() {
         }
     }
 
-    for y in min_y..=max_y {
-        // above room line
-        for x in min_x..=max_x {
-            print!("#");
-            if let Some(room) = map.get(&(x, y)) {
-                if room.doors.contains(&Direction::North) {
-                    print!("-");
-                } else {
-                    print!("#");
-                }
-            } else {
-                print!("#");
-            }
-        }
-
-        // room line
-        print!("\n");
-        for x in min_x..=max_x {
-            if let Some(room) = map.get(&(x, y)) {
-                if room.doors.contains(&Direction::West) {
-                    print!("|");
-                } else {
-                    print!("#");
-                }
-                print!(".");
-            } else {
-                print!("##");
-            }
-        }
-        print!("\n");
-    }
+    draw_map(&map, min_x, min_y, max_x, max_y);
 }
