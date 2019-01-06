@@ -48,7 +48,7 @@ fn distance_to_target(location: &(usize, usize), target: &(usize, usize)) -> usi
     x_diff as usize + y_diff as usize
 }
 
-pub fn get_neighbours(pos: &(usize, usize), tiles: &Vec<Vec<TileType>>, target: &(usize, usize)) -> Vec<(usize, usize)> {
+pub fn get_neighbours(pos: &(usize, usize), tiles: &Vec<Vec<TileType>>) -> Vec<(usize, usize)> {
     let mut neighbours: Vec<(usize, usize)> = Vec::with_capacity(4);
 
     if pos.0 > 0 {
@@ -132,8 +132,8 @@ pub fn find_path(tiles: &Vec<Vec<TileType>>, start_pos: (usize, usize), target: 
     heap.push(Location::new(start_pos, 0, tiles[start_pos.1][start_pos.0], Tool::Torch));
 
     // current pos, points to last pos + cost of getting here
-    let mut closed: HashMap<(usize, usize), ((usize, usize), usize)> = HashMap::new();
-    closed.insert(start_pos, (start_pos, 1));
+    let mut closed: HashMap<(usize, usize), ((usize, usize), usize, Tool)> = HashMap::new();
+    closed.insert(start_pos, (start_pos, 0, Tool::Torch));
 
     let mut total = 0;
     while let Some(location) = heap.pop() {
@@ -143,16 +143,17 @@ pub fn find_path(tiles: &Vec<Vec<TileType>>, start_pos: (usize, usize), target: 
             }
             break
         }
-        let neighbours = get_neighbours(&location.position, &tiles, &target);
+        let neighbours = get_neighbours(&location.position, &tiles);
         for neighbour in neighbours {
-            let target_tile_type = tiles[neighbour.1][neighbour.0].to_owned();
-            let (offset_cost, tool_type) = get_next_cost(&location.tool, &tiles[neighbour.1][neighbour.0], &target_tile_type);
+            let target_tile_type = tiles[neighbour.1][neighbour.0];
+            let current_tile_type = tiles[location.position.1][location.position.0];
+            let (offset_cost, tool_type) = get_next_cost(&location.tool, &current_tile_type, &target_tile_type);
             let new_cost = costs.get(&location.position).unwrap() + offset_cost;
             if !costs.contains_key(&neighbour) || new_cost < *costs.get(&neighbour).unwrap() {
-                // push to vec here, and we'll add shortest one by reading order to heap after
+                println!("{:?} {:?} using {:?}", neighbour, target_tile_type, tool_type);
                 heap.push(Location::new(neighbour, new_cost + distance_to_target(&neighbour, &target), target_tile_type, tool_type));
                 costs.insert(neighbour, new_cost);
-                closed.insert(neighbour, (location.position, offset_cost));
+                closed.insert(neighbour, (location.position, offset_cost, tool_type));
             }
         }
     }
@@ -164,9 +165,9 @@ pub fn find_path(tiles: &Vec<Vec<TileType>>, start_pos: (usize, usize), target: 
         total += closed.get(&target).unwrap().1;
         let mut key = target;
         loop {
-            let (parent, cost) = closed.get(&key).unwrap();
+            let (parent, cost, tool_type) = closed.get(&key).unwrap();
+            println!("{},{} using {:?}", key.0, key.1, tool_type);
             if *parent == key {
-
                 break
             }
             path.push(*parent);

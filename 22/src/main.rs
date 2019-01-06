@@ -22,6 +22,23 @@ fn erosion_level(erosion_levels: &HashMap<(usize, usize), usize>, x: usize, y: u
     }
 }
 
+fn print_mine(path: &Vec<(usize, usize)>, tiles: &Vec<Vec<TileType>>, check_path: bool) {
+    for y in 0..=(TARGET.1 + 10) {
+        for x in 0..=(TARGET.0 + 10) {
+            if check_path && path.contains(&(x, y)) {
+                print!("o");
+            } else {
+                match tiles[y][x] {
+                    TileType::Rocky => print!("."),
+                    TileType::Wet => print!("="),
+                    TileType::Narrow => print!("|"),
+                }
+            }
+        }
+        print!("\n");
+    }
+}
+
 fn main() {
     let mut tiles: Vec<Vec<TileType>> = Vec::new();
     let mut erosion_levels = HashMap::new();
@@ -50,19 +67,7 @@ fn main() {
 
     let (path, cost) = astar::find_path(&tiles, (0, 0), TARGET);
     println!("{}", cost);
-
-    for y in 0..=(TARGET.1 + 10) {
-        for x in 0..=(TARGET.0 + 10) {
-            if path.contains(&(x, y)) {
-                print!("o");
-            } else {
-                match tiles[y][x] {
-                    TileType::Rocky => print!("."),
-                    TileType::Wet => print!("="),
-                    TileType::Narrow => print!("|"),
-                }
-            }
-        }
-        print!("\n");
-    }
+    print_mine(&path, &tiles, true);
+    print!("\n\n");
+    print_mine(&path, &tiles, false);
 }
