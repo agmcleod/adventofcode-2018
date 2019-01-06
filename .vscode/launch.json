@@ -318,6 +318,23 @@
       },
       "args": [],
       "cwd": "${workspaceFolder}"
-    }
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug executable 'twentyone'",
+      "cargo": {
+        "args": [
+          "build",
+          "--bin=twentyone",
+          "--package=twentyone"
+        ],
+        "filter": {
+          "kind": "bin"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
   ]
 }

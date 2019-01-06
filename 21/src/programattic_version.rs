@@ -1,6 +1,7 @@
 use read_input;
 
-use std::cmp::{self, Ordering};
+use std::collections::HashMap;
+use std::cmp::Ordering;
 
 fn addr(registers: &mut Vec<usize>, a: usize, b: usize, c: usize) {
     let sum = registers.get(a).unwrap() + registers.get(b).unwrap();
@@ -123,101 +124,99 @@ fn main() {
         }
     }
 
-    let mut register_zero = 0;
-    let mut runs = Vec::with_capacity(1000);
-    for _ in 0..1000 {
-        let mut registers = vec![register_zero, 0, 0, 0, 0, 0];
+    let mut registers = vec![0, 0, 0, 0, 0, 0];
 
-        let mut ip_value = 0;
-        let mut count = 0;
+    let mut ip_value = 0;
+    let mut count = 0;
+    let mut counts_for_register_four = HashMap::new();
 
-        loop {
-            if ip_value >= instructions.len() {
+    loop {
+        if ip_value >= instructions.len() {
+            break
+        }
+
+        let instruction = instructions.get(ip_value).unwrap();
+        let instruction_arguments = &instruction.arguments;
+
+        *registers.get_mut(ip).unwrap() = ip_value;
+        count += 1;
+
+        match instruction.key.as_ref() {
+            "addr" => {
+                addr(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
+            },
+            "addi" => {
+                addi(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
+            },
+            "mulr" => {
+                mulr(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
+            },
+            "muli" => {
+                muli(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
+            },
+            "banr" => {
+                banr(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
+            },
+            "bani" => {
+                bani(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
+            },
+            "borr" => {
+                borr(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
+            },
+            "bori" => {
+                bori(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
+            },
+            "setr" => {
+                setr(&mut registers, instruction_arguments[0], instruction_arguments[2]);
+            },
+            "seti" => {
+                seti(&mut registers, instruction_arguments[0], instruction_arguments[2]);
+            },
+            "gtir" => {
+                gtir(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
+            },
+            "gtri" => {
+                gtri(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
+            },
+            "gtrr" => {
+                gtrr(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
+            },
+            "eqir" => {
+                eqir(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
+            },
+            "eqri" => {
+                eqri(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
+            },
+            "eqrr" => {
+                eqrr(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
+            },
+            _ => panic!("Unrecognized operation {}", instruction.key),
+        }
+
+        if ip_value == 28 {
+            println!("Checking r4");
+            let value = registers.get(4).unwrap();
+            if counts_for_register_four.contains_key(value) {
                 break
-            }
-
-            let instruction = instructions.get(ip_value).unwrap();
-            let instruction_arguments = &instruction.arguments;
-
-            *registers.get_mut(ip).unwrap() = ip_value;
-
-            match instruction.key.as_ref() {
-                "addr" => {
-                    addr(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
-                },
-                "addi" => {
-                    addi(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
-                },
-                "mulr" => {
-                    mulr(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
-                },
-                "muli" => {
-                    muli(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
-                },
-                "banr" => {
-                    banr(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
-                },
-                "bani" => {
-                    bani(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
-                },
-                "borr" => {
-                    borr(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
-                },
-                "bori" => {
-                    bori(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
-                },
-                "setr" => {
-                    setr(&mut registers, instruction_arguments[0], instruction_arguments[2]);
-                },
-                "seti" => {
-                    seti(&mut registers, instruction_arguments[0], instruction_arguments[2]);
-                },
-                "gtir" => {
-                    gtir(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
-                },
-                "gtri" => {
-                    gtri(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
-                },
-                "gtrr" => {
-                    gtrr(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
-                },
-                "eqir" => {
-                    eqir(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
-                },
-                "eqri" => {
-                    eqri(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
-                },
-                "eqrr" => {
-                    eqrr(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
-                },
-                _ => panic!("Unrecognized operation {}", instruction.key),
-            }
-
-            ip_value = *registers.get(ip).unwrap();
-            ip_value += 1;
-
-            println!("{:?} {} registers {:?}", instruction, ip_value, registers);
-
-            count += 1;
-
-            if count > 12 {
-                break
+            } else {
+                counts_for_register_four.insert(*value, count);
             }
         }
 
-        runs.push((count, register_zero));
+        ip_value = *registers.get(ip).unwrap();
+        ip_value += 1;
 
-        register_zero += 1;
-        break
+        // println!("{:?} {} registers {:?}", instruction, ip_value, registers);
     }
 
-    runs.sort_by(|a, b| {
-        match a.0.cmp(&b.0) {
-            Ordering::Equal => a.1.cmp(&b.1),
-            Ordering::Less => Ordering::Less,
-            Ordering::Greater => Ordering::Greater,
+    let mut data: Vec<(usize, usize)> = counts_for_register_four.iter().map(|(register, count)| (*register, *count)).collect();
+
+    data.sort_by(|a, b| {
+        match a.1.cmp(&b.1) {
+            Ordering::Equal => a.0.cmp(&b.0),
+            _ => a.1.cmp(&b.1),
         }
     });
 
-    println!("{:?}", runs.get(0).unwrap());
+    println!("{:?}", data.get(0).unwrap());
 }
