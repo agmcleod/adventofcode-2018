@@ -3,6 +3,7 @@ use std::collections::HashMap;
 const DEPTH: usize = 510;
 const TARGET: (usize, usize) = (10, 10);
 const MODULO: usize = 20183;
+const PADDING: usize = 10;
 
 mod astar;
 mod tile_type;
@@ -23,8 +24,8 @@ fn erosion_level(erosion_levels: &HashMap<(usize, usize), usize>, x: usize, y: u
 }
 
 fn print_mine(path: &Vec<(usize, usize)>, tiles: &Vec<Vec<TileType>>, check_path: bool) {
-    for y in 0..=(TARGET.1 + 10) {
-        for x in 0..=(TARGET.0 + 10) {
+    for y in 0..=(TARGET.1 + PADDING) {
+        for x in 0..=(TARGET.0 + PADDING) {
             if check_path && path.contains(&(x, y)) {
                 print!("o");
             } else {
@@ -44,8 +45,8 @@ fn main() {
     let mut erosion_levels = HashMap::new();
 
     let mut total = 0;
-    for x in 0..=(TARGET.0 + 10) {
-        for y in 0..=(TARGET.1 + 10) {
+    for x in 0..=(TARGET.0 + PADDING) {
+        for y in 0..=(TARGET.1 + PADDING) {
             let level = erosion_level(&erosion_levels, x, y);
             erosion_levels.insert((x, y), level);
 
