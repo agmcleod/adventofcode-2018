@@ -66,8 +66,7 @@ fn main() {
 
     println!("{}", total);
 
-    let (path, cost) = astar::find_path(&tiles, (0, 0), TARGET);
-    println!("{}", cost);
+    let path = astar::find_path(&tiles, (0, 0), TARGET);
     print_mine(&path, &tiles, true);
     print!("\n\n");
     print_mine(&path, &tiles, false);

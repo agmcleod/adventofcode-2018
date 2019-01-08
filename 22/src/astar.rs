@@ -10,15 +10,17 @@ pub struct Location {
     cost: usize,
     tile_type: TileType,
     tool: Tool,
+    minutes: usize,
 }
 
 impl Location {
-    fn new(position: (usize, usize), cost: usize, tile_type: TileType, tool: Tool) -> Self {
+    fn new(position: (usize, usize), cost: usize, tile_type: TileType, tool: Tool, minutes: usize) -> Self {
         Location{
             position,
             cost,
             tile_type,
             tool,
+            minutes,
         }
     }
 }
@@ -124,24 +126,30 @@ fn get_next_cost(current_tool: &Tool, current_type: &TileType, target_tile_type:
     (cost, resulting_tool)
 }
 
-pub fn find_path(tiles: &Vec<Vec<TileType>>, start_pos: (usize, usize), target: (usize, usize)) -> (Vec<(usize, usize)>, usize) {
+pub fn find_path(tiles: &Vec<Vec<TileType>>, start_pos: (usize, usize), target: (usize, usize)) -> Vec<(usize, usize)> {
     let mut costs: HashMap<(usize, usize), usize> = HashMap::new();
     costs.insert(start_pos, 0);
 
     let mut heap = BinaryHeap::new();
-    heap.push(Location::new(start_pos, 0, tiles[start_pos.1][start_pos.0], Tool::Torch));
+    heap.push(Location::new(start_pos, 0, tiles[start_pos.1][start_pos.0], Tool::Torch, 0));
 
     // current pos, points to last pos + cost of getting here
-    let mut closed: HashMap<(usize, usize), ((usize, usize), usize, Tool)> = HashMap::new();
-    closed.insert(start_pos, (start_pos, 0, Tool::Torch));
+    let mut closed: HashMap<(usize, usize), ((usize, usize), Tool)> = HashMap::new();
+    closed.insert(start_pos, (start_pos, Tool::Torch));
 
-    let mut total = 0;
     while let Some(location) = heap.pop() {
         if location.position.0 == target.0 && location.position.1 == target.1 {
+            // if location.tool != Tool::Torch {
+            //     total = 7;
+            // }
+            // break
             if location.tool != Tool::Torch {
-                total = 7;
+                println!("end add torch {}", location.minutes + 7);
+            } else {
+                println!("end {}", location.minutes);
             }
-            break
+
+            continue
         }
         let neighbours = get_neighbours(&location.position, &tiles);
         for neighbour in neighbours {
@@ -150,10 +158,16 @@ pub fn find_path(tiles: &Vec<Vec<TileType>>, start_pos: (usize, usize), target: 
             let (offset_cost, tool_type) = get_next_cost(&location.tool, &current_tile_type, &target_tile_type);
             let new_cost = costs.get(&location.position).unwrap() + offset_cost;
             if !costs.contains_key(&neighbour) || new_cost < *costs.get(&neighbour).unwrap() {
-                println!("{:?} {:?} using {:?}", neighbour, target_tile_type, tool_type);
-                heap.push(Location::new(neighbour, new_cost + distance_to_target(&neighbour, &target), target_tile_type, tool_type));
+                // println!("{:?} {:?} using {:?} from {:?}", neighbour, target_tile_type, tool_type, location.position);
+                heap.push(Location::new(neighbour, new_cost + distance_to_target(&neighbour, &target), target_tile_type, tool_type, location.minutes + offset_cost));
+                // if neighbour.0 == 2 && neighbour.1 == 7 {
+                //     if costs.contains_key(&neighbour) {
+                //         println!("Old cost {} new cost {}", costs.get(&neighbour).unwrap(), new_cost);
+                //     }
+                //     println!("inserting {:?} {:?} {:?} from {:?} to {:?}", offset_cost, tool_type, location.tool, location.position, neighbour);
+                // }
                 costs.insert(neighbour, new_cost);
-                closed.insert(neighbour, (location.position, offset_cost, tool_type));
+                closed.insert(neighbour, (location.position, tool_type));
             }
         }
     }
@@ -162,19 +176,17 @@ pub fn find_path(tiles: &Vec<Vec<TileType>>, start_pos: (usize, usize), target: 
 
     if closed.contains_key(&target) {
         path.push(target);
-        total += closed.get(&target).unwrap().1;
         let mut key = target;
         loop {
-            let (parent, cost, tool_type) = closed.get(&key).unwrap();
+            let (parent, tool_type) = closed.get(&key).unwrap();
             println!("{},{} using {:?}", key.0, key.1, tool_type);
             if *parent == key {
                 break
             }
             path.push(*parent);
-            total += cost;
             key = *parent;
         }
     }
 
-    (path, total)
+    path
 }
