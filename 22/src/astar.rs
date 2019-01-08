@@ -7,6 +7,7 @@ use crate::tool::Tool;
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct Location {
     position: (usize, usize),
+    estimated_cost: usize,
     cost: usize,
     tile_type: TileType,
     tool: Tool,
@@ -14,9 +15,10 @@ pub struct Location {
 }
 
 impl Location {
-    fn new(position: (usize, usize), cost: usize, tile_type: TileType, tool: Tool, minutes: usize) -> Self {
+    fn new(position: (usize, usize), estimated_cost: usize, cost: usize, tile_type: TileType, tool: Tool, minutes: usize) -> Self {
         Location{
             position,
+            estimated_cost,
             cost,
             tile_type,
             tool,
@@ -27,7 +29,10 @@ impl Location {
 
 impl Ord for Location {
     fn cmp(&self, other: &Location) -> Ordering {
-        other.cost.cmp(&self.cost)
+        match other.estimated_cost.cmp(&self.estimated_cost) {
+            Ordering::Equal => self.cost.cmp(&other.cost),
+            s => s,
+        }
     }
 }
 
@@ -86,7 +91,7 @@ fn get_next_cost(current_tool: &Tool, current_type: &TileType, target_tile_type:
                     } else if *current_type == TileType::Narrow {
                         resulting_tool = Tool::Torch;
                     }
-                    8
+                    7
                 },
                 _ => 1,
             }
@@ -101,7 +106,7 @@ fn get_next_cost(current_tool: &Tool, current_type: &TileType, target_tile_type:
                     } else if *current_type == TileType::Narrow {
                         resulting_tool = Tool::Neither;
                     }
-                    8
+                    7
                 },
                 _ => 1,
             }
@@ -116,7 +121,7 @@ fn get_next_cost(current_tool: &Tool, current_type: &TileType, target_tile_type:
                     } else if *current_type == TileType::Wet {
                         resulting_tool = Tool::Neither;
                     }
-                    8
+                    7
                 },
                 _ => 1,
             }
@@ -131,7 +136,7 @@ pub fn find_path(tiles: &Vec<Vec<TileType>>, start_pos: (usize, usize), target: 
     costs.insert(start_pos, 0);
 
     let mut heap = BinaryHeap::new();
-    heap.push(Location::new(start_pos, 0, tiles[start_pos.1][start_pos.0], Tool::Torch, 0));
+    heap.push(Location::new(start_pos, 0, distance_to_target(&start_pos, &target), tiles[start_pos.1][start_pos.0], Tool::Torch, 0));
 
     // current pos, points to last pos + cost of getting here
     let mut closed: HashMap<(usize, usize), ((usize, usize), Tool)> = HashMap::new();
@@ -139,17 +144,13 @@ pub fn find_path(tiles: &Vec<Vec<TileType>>, start_pos: (usize, usize), target: 
 
     while let Some(location) = heap.pop() {
         if location.position.0 == target.0 && location.position.1 == target.1 {
-            // if location.tool != Tool::Torch {
-            //     total = 7;
-            // }
-            // break
             if location.tool != Tool::Torch {
                 println!("end add torch {}", location.minutes + 7);
             } else {
                 println!("end {}", location.minutes);
             }
 
-            continue
+            break
         }
         let neighbours = get_neighbours(&location.position, &tiles);
         for neighbour in neighbours {
@@ -159,7 +160,16 @@ pub fn find_path(tiles: &Vec<Vec<TileType>>, start_pos: (usize, usize), target: 
             let new_cost = costs.get(&location.position).unwrap() + offset_cost;
             if !costs.contains_key(&neighbour) || new_cost < *costs.get(&neighbour).unwrap() {
                 // println!("{:?} {:?} using {:?} from {:?}", neighbour, target_tile_type, tool_type, location.position);
-                heap.push(Location::new(neighbour, new_cost + distance_to_target(&neighbour, &target), target_tile_type, tool_type, location.minutes + offset_cost));
+                heap.push(
+                    Location::new(
+                        neighbour,
+                        new_cost + distance_to_target(&neighbour, &target),
+                        new_cost,
+                        target_tile_type,
+                        tool_type,
+                        location.minutes + offset_cost
+                    )
+                );
                 // if neighbour.0 == 2 && neighbour.1 == 7 {
                 //     if costs.contains_key(&neighbour) {
                 //         println!("Old cost {} new cost {}", costs.get(&neighbour).unwrap(), new_cost);
