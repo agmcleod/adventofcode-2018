@@ -76,7 +76,7 @@ fn get_other_tool_type(tile_type: &TileType, current_tool: &Tool) -> Tool {
     }
 }
 
-fn get_neighbours(pos: &(usize, usize), current_tool: &Tool, tiles: &Vec<Vec<TileType>>) -> Vec<((usize, usize), Tool)> {
+fn get_neighbours(pos: &(usize, usize), current_tool: &Tool, tiles: &Vec<Vec<TileType>>, target: &(usize, usize)) -> Vec<((usize, usize), Tool)> {
     let mut coords: Vec<(usize, usize)> = Vec::new();
 
     if pos.0 > 0 {
@@ -99,6 +99,11 @@ fn get_neighbours(pos: &(usize, usize), current_tool: &Tool, tiles: &Vec<Vec<Til
 
     let mut neighbours = Vec::new();
     for coord in &coords {
+        if coord.0 == target.0 && coord.1 == target.1 {
+            neighbours.push((coord.to_owned(), Tool::Torch));
+            continue
+        }
+
         let tile_type = tiles[coord.1][coord.0];
         if tile_type == current_tile_type {
             neighbours.push((coord.to_owned(), *current_tool));
@@ -152,16 +157,12 @@ pub fn find_path(tiles: &Vec<Vec<TileType>>, start_pos: (usize, usize), target: 
         if location.position.0 == target.0 && location.position.1 == target.1 {
             end_closed.0 = location.position;
             end_closed.1 = location.tool;
-            if location.tool != Tool::Torch {
-                println!("end add torch {}", location.minutes + 7);
-            } else {
-                println!("end {}", location.minutes);
-            }
+            println!("end {}", location.minutes);
 
             break
         }
 
-        let neighbours = get_neighbours(&location.position, &location.tool, &tiles);
+        let neighbours = get_neighbours(&location.position, &location.tool, &tiles, &target);
         for (neighbour, tool_type) in neighbours {
             let target_tile_type = tiles[neighbour.1][neighbour.0];
             let mut offset_cost = 1;
