@@ -86,7 +86,7 @@ fn get_next_cost(current_tool: &Tool, current_type: &TileType, target_tile_type:
                     } else if *current_type == TileType::Narrow {
                         resulting_tool = Tool::Torch;
                     }
-                    7
+                    8
                 },
                 _ => 1,
             }
@@ -101,7 +101,7 @@ fn get_next_cost(current_tool: &Tool, current_type: &TileType, target_tile_type:
                     } else if *current_type == TileType::Narrow {
                         resulting_tool = Tool::Neither;
                     }
-                    7
+                    8
                 },
                 _ => 1,
             }
@@ -116,7 +116,7 @@ fn get_next_cost(current_tool: &Tool, current_type: &TileType, target_tile_type:
                     } else if *current_type == TileType::Wet {
                         resulting_tool = Tool::Neither;
                     }
-                    7
+                    8
                 },
                 _ => 1,
             }
@@ -127,8 +127,8 @@ fn get_next_cost(current_tool: &Tool, current_type: &TileType, target_tile_type:
 }
 
 pub fn find_path(tiles: &Vec<Vec<TileType>>, start_pos: (usize, usize), target: (usize, usize)) -> Vec<(usize, usize)> {
-    let mut costs: HashMap<((usize, usize), Tool), usize> = HashMap::new();
-    costs.insert((start_pos, Tool::Torch), 0);
+    let mut costs: HashMap<(usize, usize), usize> = HashMap::new();
+    costs.insert(start_pos, 0);
 
     let mut heap = BinaryHeap::new();
     heap.push(Location::new(start_pos, 0, tiles[start_pos.1][start_pos.0], Tool::Torch, 0));
@@ -145,42 +145,27 @@ pub fn find_path(tiles: &Vec<Vec<TileType>>, start_pos: (usize, usize), target: 
                 println!("end {}", location.minutes);
             }
 
-            break
+            // break
         }
         let neighbours = get_neighbours(&location.position, &tiles);
         for neighbour in neighbours {
             let target_tile_type = tiles[neighbour.1][neighbour.0];
             let current_tile_type = tiles[location.position.1][location.position.0];
             let (offset_cost, tool_type) = get_next_cost(&location.tool, &current_tile_type, &target_tile_type);
-
-            if costs.contains_key(&(location.position, tool_type)) {
-                let new_cost = costs.get(&(location.position, tool_type)).unwrap() + offset_cost;
-                if !costs.contains_key(&(neighbour, tool_type)) || new_cost < *costs.get(&(neighbour, tool_type)).unwrap() {
-                    println!("{:?} {:?} using {:?} from {:?} new cost {}", neighbour, target_tile_type, tool_type, location.position, new_cost);
-                    heap.push(
-                        Location::new(
-                            neighbour,
-                            new_cost + distance_to_target(&neighbour, &target),
-                            target_tile_type,
-                            tool_type,
-                            location.minutes + offset_cost
-                        )
-                    );
-                    costs.insert((neighbour, tool_type), new_cost);
-                    closed.insert(neighbour, (location.position, tool_type));
-                }
-            } else {
-                let new_cost = costs.get(&(location.position, location.tool)).unwrap() + offset_cost;
+            let new_cost = costs.get(&location.position).unwrap() + offset_cost;
+            if !costs.contains_key(&neighbour) || new_cost < *costs.get(&neighbour).unwrap() {
+                println!("{:?} {:?} using {:?} from {:?}", neighbour, target_tile_type, tool_type, location.position);
                 heap.push(
                     Location::new(
-                        location.position,
-                        new_cost + distance_to_target(&location.position, &target),
+                        neighbour,
+                        new_cost + distance_to_target(&neighbour, &target),
                         target_tile_type,
                         tool_type,
                         location.minutes + offset_cost
                     )
                 );
-                costs.insert((location.position, tool_type), new_cost);
+                costs.insert(neighbour, new_cost);
+                closed.insert(neighbour, (location.position, tool_type));
             }
         }
     }
@@ -191,8 +176,8 @@ pub fn find_path(tiles: &Vec<Vec<TileType>>, start_pos: (usize, usize), target: 
         path.push(target);
         let mut key = target;
         loop {
-            let (parent, tool) = closed.get(&key).unwrap();
-            println!("{:?} from {:?} using {:?}", key, parent, tool);
+            let (parent, tool_type) = closed.get(&key).unwrap();
+            println!("{},{} using {:?}", key.0, key.1, tool_type);
             if *parent == key {
                 break
             }
