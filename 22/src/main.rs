@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
-const DEPTH: usize = 510;
-const TARGET: (usize, usize) = (10, 10);
+const DEPTH: usize = 3558;
+const TARGET: (usize, usize) = (15, 740);
 const MODULO: usize = 20183;
-const PADDING: usize = 10;
+const PADDING: usize = 300;
 
 mod astar;
 mod tile_type;
@@ -67,7 +67,7 @@ fn main() {
     println!("{}", total);
 
     let path = astar::find_path(&tiles, (0, 0), TARGET);
-    print_mine(&path, &tiles, true);
-    print!("\n\n");
-    print_mine(&path, &tiles, false);
+    // print_mine(&path, &tiles, true);
+    // print!("\n\n");
+    // print_mine(&path, &tiles, false);
 }

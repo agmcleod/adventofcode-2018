@@ -50,111 +50,126 @@ fn distance_to_target(location: &(usize, usize), target: &(usize, usize)) -> usi
     x_diff as usize + y_diff as usize
 }
 
-pub fn get_neighbours(pos: &(usize, usize), tiles: &Vec<Vec<TileType>>) -> Vec<(usize, usize)> {
-    let mut neighbours: Vec<(usize, usize)> = Vec::with_capacity(4);
+fn get_other_tool_type(tile_type: &TileType, current_tool: &Tool) -> Tool {
+    match *tile_type {
+        TileType::Rocky => {
+            if *current_tool == Tool::ClimbingGear {
+                Tool::Torch
+            } else {
+                Tool::ClimbingGear
+            }
+        },
+        TileType::Wet => {
+            if *current_tool == Tool::ClimbingGear {
+                Tool::Neither
+            } else {
+                Tool::ClimbingGear
+            }
+        },
+        TileType::Narrow => {
+            if *current_tool == Tool::Neither {
+                Tool::Torch
+            } else {
+                Tool::Neither
+            }
+        }
+    }
+}
+
+fn get_neighbours(pos: &(usize, usize), current_tool: &Tool, tiles: &Vec<Vec<TileType>>) -> Vec<((usize, usize), Tool)> {
+    let mut coords: Vec<(usize, usize)> = Vec::new();
 
     if pos.0 > 0 {
-        neighbours.push((pos.0 - 1, pos.1));
+        coords.push((pos.0 - 1, pos.1));
     }
 
     if pos.0 < tiles[0].len() - 1 {
-        neighbours.push((pos.0 + 1, pos.1));
+        coords.push((pos.0 + 1, pos.1));
     }
 
     if pos.1 > 0 {
-        neighbours.push((pos.0, pos.1 - 1));
+        coords.push((pos.0, pos.1 - 1));
     }
 
     if pos.1 < tiles.len() - 1 {
-        neighbours.push((pos.0, pos.1 + 1));
+        coords.push((pos.0, pos.1 + 1));
+    }
+
+    let current_tile_type = tiles[pos.1][pos.0];
+
+    let mut neighbours = Vec::new();
+    for coord in &coords {
+        let tile_type = tiles[coord.1][coord.0];
+        if tile_type == current_tile_type {
+            neighbours.push((coord.to_owned(), *current_tool));
+            neighbours.push((coord.to_owned(), get_other_tool_type(&tile_type, current_tool)));
+        } else {
+            let tool = match current_tile_type {
+                TileType::Rocky => {
+                    match tile_type {
+                        TileType::Narrow => Tool::Torch,
+                        TileType::Wet => Tool::ClimbingGear,
+                        _ => panic!("Cannot change against same tile type")
+                    }
+                },
+                TileType::Wet => {
+                    match tile_type {
+                        TileType::Rocky => Tool::ClimbingGear,
+                        TileType::Narrow => Tool::Neither,
+                        _ => panic!("Cannot change against same tile type")
+                    }
+                },
+                TileType::Narrow => {
+                    match tile_type {
+                        TileType::Rocky => Tool::Torch,
+                        TileType::Wet => Tool::Neither,
+                        _ => panic!("Cannot change against same tile type")
+                    }
+                }
+            };
+
+            neighbours.push((coord.to_owned(), tool));
+        }
     }
 
     neighbours
 }
 
-fn get_next_cost(current_tool: &Tool, current_type: &TileType, target_tile_type: &TileType) -> (usize, Tool) {
-    let mut resulting_tool = current_tool.to_owned();
-
-    let cost = match *target_tile_type {
-        TileType::Rocky => {
-            match current_tool {
-                Tool::Neither => {
-                    // were in a wet spot, so we use climbing gear
-                    if *current_type == TileType::Wet {
-                        resulting_tool = Tool::ClimbingGear;
-                    // were in a narrow spot, so we use a torch
-                    } else if *current_type == TileType::Narrow {
-                        resulting_tool = Tool::Torch;
-                    }
-                    8
-                },
-                _ => 1,
-            }
-        },
-        TileType::Wet => {
-            match current_tool {
-                Tool::Torch => {
-                    // were in a rocky spot, so we use climbing gear
-                    if *current_type == TileType::Rocky {
-                        resulting_tool = Tool::ClimbingGear;
-                    // were in a narrow spot, so we use a neither
-                    } else if *current_type == TileType::Narrow {
-                        resulting_tool = Tool::Neither;
-                    }
-                    8
-                },
-                _ => 1,
-            }
-        },
-        TileType::Narrow => {
-            match current_tool {
-                Tool::ClimbingGear => {
-                    // were in a rocky spot, so we use torch
-                    if *current_type == TileType::Rocky {
-                        resulting_tool = Tool::Torch;
-                    // were in a wet spot, so we use a neither
-                    } else if *current_type == TileType::Wet {
-                        resulting_tool = Tool::Neither;
-                    }
-                    8
-                },
-                _ => 1,
-            }
-        },
-    };
-
-    (cost, resulting_tool)
-}
-
 pub fn find_path(tiles: &Vec<Vec<TileType>>, start_pos: (usize, usize), target: (usize, usize)) -> Vec<(usize, usize)> {
-    let mut costs: HashMap<(usize, usize), usize> = HashMap::new();
-    costs.insert(start_pos, 0);
+    let mut costs: HashMap<((usize, usize), Tool), usize> = HashMap::new();
+    costs.insert((start_pos, Tool::Torch), 0);
 
     let mut heap = BinaryHeap::new();
     heap.push(Location::new(start_pos, 0, tiles[start_pos.1][start_pos.0], Tool::Torch, 0));
 
     // current pos, points to last pos + cost of getting here
-    let mut closed: HashMap<(usize, usize), ((usize, usize), Tool)> = HashMap::new();
-    closed.insert(start_pos, (start_pos, Tool::Torch));
+    let mut closed: HashMap<((usize, usize), Tool), ((usize, usize), Tool)> = HashMap::new();
+    closed.insert((start_pos, Tool::Torch), (start_pos, Tool::Torch));
+
+    let mut end_closed = ((0, 0), Tool::Torch);
 
     while let Some(location) = heap.pop() {
         if location.position.0 == target.0 && location.position.1 == target.1 {
+            end_closed.0 = location.position;
+            end_closed.1 = location.tool;
             if location.tool != Tool::Torch {
                 println!("end add torch {}", location.minutes + 7);
             } else {
                 println!("end {}", location.minutes);
             }
 
-            // break
+            break
         }
-        let neighbours = get_neighbours(&location.position, &tiles);
-        for neighbour in neighbours {
+
+        let neighbours = get_neighbours(&location.position, &location.tool, &tiles);
+        for (neighbour, tool_type) in neighbours {
             let target_tile_type = tiles[neighbour.1][neighbour.0];
-            let current_tile_type = tiles[location.position.1][location.position.0];
-            let (offset_cost, tool_type) = get_next_cost(&location.tool, &current_tile_type, &target_tile_type);
-            let new_cost = costs.get(&location.position).unwrap() + offset_cost;
-            if !costs.contains_key(&neighbour) || new_cost < *costs.get(&neighbour).unwrap() {
-                println!("{:?} {:?} using {:?} from {:?}", neighbour, target_tile_type, tool_type, location.position);
+            let mut offset_cost = 1;
+            if tool_type != location.tool {
+                offset_cost = 8;
+            }
+            let new_cost = costs.get(&(location.position, location.tool)).unwrap() + offset_cost;
+            if !costs.contains_key(&(neighbour, tool_type)) || new_cost < *costs.get(&(neighbour, tool_type)).unwrap() {
                 heap.push(
                     Location::new(
                         neighbour,
@@ -164,25 +179,25 @@ pub fn find_path(tiles: &Vec<Vec<TileType>>, start_pos: (usize, usize), target: 
                         location.minutes + offset_cost
                     )
                 );
-                costs.insert(neighbour, new_cost);
-                closed.insert(neighbour, (location.position, tool_type));
+                costs.insert((neighbour, tool_type), new_cost);
+                closed.insert((neighbour, tool_type), (location.position, location.tool));
             }
         }
     }
 
     let mut path: Vec<(usize, usize)> = Vec::new();
 
-    if closed.contains_key(&target) {
+    if closed.contains_key(&end_closed) {
         path.push(target);
-        let mut key = target;
+        let mut key = end_closed;
         loop {
-            let (parent, tool_type) = closed.get(&key).unwrap();
-            println!("{},{} using {:?}", key.0, key.1, tool_type);
-            if *parent == key {
+            let parent_node = closed.get(&key).unwrap();
+            // println!("{:?} using {:?}", key.0, parent_node.1);
+            if parent_node.0 == key.0 {
                 break
             }
-            path.push(*parent);
-            key = *parent;
+            path.push(parent_node.0);
+            key = *parent_node;
         }
     }
 
