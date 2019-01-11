@@ -36,7 +36,7 @@ fn main() {
 
     let largest_bot = nanobots.get(largest_radius_with_index.1).unwrap();
     let mut part_one_count = 0;
-    for (i, bot) in nanobots.iter().enumerate() {
+    for bot in nanobots.iter() {
         if distance(&largest_bot.pos, &bot.pos) <= largest_bot.radius {
             part_one_count += 1;
         }
