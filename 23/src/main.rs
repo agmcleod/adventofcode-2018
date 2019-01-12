@@ -1,14 +1,18 @@
 use read_input;
 
+use std::cmp;
+
+type Coord = (i64, i64, i64);
+
 struct Nanobot {
-    pos: (i64, i64, i64),
+    pos: Coord,
     radius: i64,
 }
 
-fn distance(location: &(i64, i64, i64), target: &(i64, i64, i64)) -> i64 {
-    let mut x_diff = (location.0 - target.0).abs();
-    let mut y_diff = (location.1 - target.1).abs();
-    let mut z_diff = (location.2 - target.2).abs();
+fn distance(location: &Coord, target: &Coord) -> i64 {
+    let x_diff = (location.0 - target.0).abs();
+    let y_diff = (location.1 - target.1).abs();
+    let z_diff = (location.2 - target.2).abs();
 
     x_diff + y_diff + z_diff
 }
@@ -36,17 +40,46 @@ fn main() {
 
     let largest_bot = nanobots.get(largest_radius_with_index.1).unwrap();
     let mut part_one_count = 0;
+
+    let mut min_x = 0;
+    let mut min_y = 0;
+    let mut min_z = 0;
+
+    let mut max_x = 0;
+    let mut max_y = 0;
+    let mut max_z = 0;
+
     for bot in nanobots.iter() {
+        min_x = cmp::min(min_x, bot.pos.0);
+        min_y = cmp::min(min_y, bot.pos.1);
+        min_z = cmp::min(min_z, bot.pos.2);
+
+        max_x = cmp::max(max_x, bot.pos.0);
+        max_y = cmp::max(max_y, bot.pos.1);
+        max_z = cmp::max(max_z, bot.pos.2);
         if distance(&largest_bot.pos, &bot.pos) <= largest_bot.radius {
             part_one_count += 1;
         }
     }
 
     println!("{}", part_one_count);
+    println!("{} {} {} {} {} {}", min_x, min_y, min_z, max_x, max_y, max_z);
 
-    // for (i, bot) in nanobots.iter().enumerate() {
-    //     for bot2 in nanobots.iter().skip(i) {
+    let sub_x_size = (max_x - min_x) / 8;
+    let sub_y_size = (max_y - min_y) / 8;
+    let sub_z_size = (max_z - min_z) / 8;
 
-    //     }
-    // }
+    let mut highest_count: Vec<(i64, Coord, Coord)> = Vec::new();
+
+    for sub_x in 0..8 {
+        for sub_y in 0..8 {
+            for sub_z in 0..8 {
+                let start = ((sub_x * sub_x_size) + min_x, (sub_y * sub_y_size) + min_y, (sub_z * sub_z_size) + min_z);
+                let end = (((sub_x + 1) * sub_x_size) + min_x, ((sub_y + 1) * sub_y_size) + min_y, ((sub_z + 1) * sub_z_size) + min_z);
+
+                for bot in &nanobots {
+                }
+            }
+        }
+    }
 }
