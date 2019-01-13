@@ -1,7 +1,7 @@
 use read_input;
 
-use std::collections::HashMap;
 use std::cmp::Ordering;
+use std::collections::HashMap;
 
 fn addr(registers: &mut Vec<usize>, a: usize, b: usize, c: usize) {
     let sum = registers.get(a).unwrap() + registers.get(b).unwrap();
@@ -103,7 +103,7 @@ fn eqrr(registers: &mut Vec<usize>, a: usize, b: usize, c: usize) {
 #[derive(Debug)]
 struct Instruction {
     key: String,
-    arguments: Vec<usize>
+    arguments: Vec<usize>,
 }
 
 fn main() {
@@ -120,7 +120,10 @@ fn main() {
             let mut parts = line.split(" ");
             let instruction = parts.next().unwrap();
             let arguments: Vec<usize> = parts.take(3).map(|n| n.parse().unwrap()).collect();
-            instructions.push(Instruction{ key: instruction.to_string(), arguments });
+            instructions.push(Instruction {
+                key: instruction.to_string(),
+                arguments,
+            });
         }
     }
 
@@ -132,7 +135,7 @@ fn main() {
 
     loop {
         if ip_value >= instructions.len() {
-            break
+            break;
         }
 
         let instruction = instructions.get(ip_value).unwrap();
@@ -143,60 +146,138 @@ fn main() {
 
         match instruction.key.as_ref() {
             "addr" => {
-                addr(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
-            },
+                addr(
+                    &mut registers,
+                    instruction_arguments[0],
+                    instruction_arguments[1],
+                    instruction_arguments[2],
+                );
+            }
             "addi" => {
-                addi(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
-            },
+                addi(
+                    &mut registers,
+                    instruction_arguments[0],
+                    instruction_arguments[1],
+                    instruction_arguments[2],
+                );
+            }
             "mulr" => {
-                mulr(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
-            },
+                mulr(
+                    &mut registers,
+                    instruction_arguments[0],
+                    instruction_arguments[1],
+                    instruction_arguments[2],
+                );
+            }
             "muli" => {
-                muli(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
-            },
+                muli(
+                    &mut registers,
+                    instruction_arguments[0],
+                    instruction_arguments[1],
+                    instruction_arguments[2],
+                );
+            }
             "banr" => {
-                banr(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
-            },
+                banr(
+                    &mut registers,
+                    instruction_arguments[0],
+                    instruction_arguments[1],
+                    instruction_arguments[2],
+                );
+            }
             "bani" => {
-                bani(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
-            },
+                bani(
+                    &mut registers,
+                    instruction_arguments[0],
+                    instruction_arguments[1],
+                    instruction_arguments[2],
+                );
+            }
             "borr" => {
-                borr(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
-            },
+                borr(
+                    &mut registers,
+                    instruction_arguments[0],
+                    instruction_arguments[1],
+                    instruction_arguments[2],
+                );
+            }
             "bori" => {
-                bori(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
-            },
+                bori(
+                    &mut registers,
+                    instruction_arguments[0],
+                    instruction_arguments[1],
+                    instruction_arguments[2],
+                );
+            }
             "setr" => {
-                setr(&mut registers, instruction_arguments[0], instruction_arguments[2]);
-            },
+                setr(
+                    &mut registers,
+                    instruction_arguments[0],
+                    instruction_arguments[2],
+                );
+            }
             "seti" => {
-                seti(&mut registers, instruction_arguments[0], instruction_arguments[2]);
-            },
+                seti(
+                    &mut registers,
+                    instruction_arguments[0],
+                    instruction_arguments[2],
+                );
+            }
             "gtir" => {
-                gtir(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
-            },
+                gtir(
+                    &mut registers,
+                    instruction_arguments[0],
+                    instruction_arguments[1],
+                    instruction_arguments[2],
+                );
+            }
             "gtri" => {
-                gtri(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
-            },
+                gtri(
+                    &mut registers,
+                    instruction_arguments[0],
+                    instruction_arguments[1],
+                    instruction_arguments[2],
+                );
+            }
             "gtrr" => {
-                gtrr(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
-            },
+                gtrr(
+                    &mut registers,
+                    instruction_arguments[0],
+                    instruction_arguments[1],
+                    instruction_arguments[2],
+                );
+            }
             "eqir" => {
-                eqir(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
-            },
+                eqir(
+                    &mut registers,
+                    instruction_arguments[0],
+                    instruction_arguments[1],
+                    instruction_arguments[2],
+                );
+            }
             "eqri" => {
-                eqri(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
-            },
+                eqri(
+                    &mut registers,
+                    instruction_arguments[0],
+                    instruction_arguments[1],
+                    instruction_arguments[2],
+                );
+            }
             "eqrr" => {
-                eqrr(&mut registers, instruction_arguments[0], instruction_arguments[1], instruction_arguments[2]);
-            },
+                eqrr(
+                    &mut registers,
+                    instruction_arguments[0],
+                    instruction_arguments[1],
+                    instruction_arguments[2],
+                );
+            }
             _ => panic!("Unrecognized operation {}", instruction.key),
         }
 
         if ip_value == 28 {
             let value = registers.get(4).unwrap();
             if counts_for_register_four.contains_key(value) {
-                break
+                break;
             } else {
                 counts_for_register_four.insert(*value, count);
             }
@@ -208,22 +289,21 @@ fn main() {
         // println!("{:?} {} registers {:?}", instruction, ip_value, registers);
     }
 
-    let mut data: Vec<(usize, usize)> = counts_for_register_four.iter().map(|(register, count)| (*register, *count)).collect();
+    let mut data: Vec<(usize, usize)> = counts_for_register_four
+        .iter()
+        .map(|(register, count)| (*register, *count))
+        .collect();
 
-    data.sort_by(|a, b| {
-        match a.1.cmp(&b.1) {
-            Ordering::Equal => a.0.cmp(&b.0),
-            _ => a.1.cmp(&b.1),
-        }
+    data.sort_by(|a, b| match a.1.cmp(&b.1) {
+        Ordering::Equal => a.0.cmp(&b.0),
+        _ => a.1.cmp(&b.1),
     });
 
     println!("{:?}", data.get(0).unwrap());
 
-    data.sort_by(|a, b| {
-        match b.1.cmp(&a.1) {
-            Ordering::Equal => a.0.cmp(&b.0),
-            _ => b.1.cmp(&a.1),
-        }
+    data.sort_by(|a, b| match b.1.cmp(&a.1) {
+        Ordering::Equal => a.0.cmp(&b.0),
+        _ => b.1.cmp(&a.1),
     });
 
     println!("{:?}", data.get(0).unwrap());

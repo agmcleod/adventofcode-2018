@@ -17,17 +17,57 @@ fn distance(location: &Coord, target: &Coord) -> i64 {
     x_diff + y_diff + z_diff
 }
 
-fn rectangles_intersect(rect1_start: &Coord, rect1_end: &Coord, rect2_start: &Coord, rect2_end: &Coord) -> bool {
-    rect1_start.0 <= rect2_start.0 &&
-    rect1_start.1 <= rect2_start.1 &&
-    rect1_start.2 <= rect2_start.2 &&
-    rect1_end.0 >= rect1_end.0 &&
-    rect1_end.1 >= rect1_end.1 &&
-    rect1_end.2 >= rect1_end.2
+fn clamp_to_closest(v: i64, min_v: i64, max_v: i64) -> i64 {
+    if v < min_v {
+        min_v
+    } else if v > max_v {
+        max_v
+    } else {
+        v
+    }
+}
+
+fn check_rect(
+    sub_x: i64,
+    sub_y: i64,
+    sub_z: i64,
+    min_x: i64,
+    min_y: i64,
+    min_z: i64,
+    sub_x_size: i64,
+    sub_y_size: i64,
+    sub_z_size: i64,
+    nanobots: &Vec<Nanobot>,
+    highest_count: &mut Vec<(i64, Coord, Coord)>,
+) {
+    let start = (
+        (sub_x * sub_x_size) + min_x,
+        (sub_y * sub_y_size) + min_y,
+        (sub_z * sub_z_size) + min_z,
+    );
+    let end = (
+        ((sub_x + 1) * sub_x_size) + min_x,
+        ((sub_y + 1) * sub_y_size) + min_y,
+        ((sub_z + 1) * sub_z_size) + min_z,
+    );
+
+    let mut count = 0;
+
+    for bot in nanobots {
+        let x = clamp_to_closest(bot.pos.0, start.0, end.0);
+        let y = clamp_to_closest(bot.pos.1, start.1, end.1);
+        let z = clamp_to_closest(bot.pos.2, start.2, end.2);
+
+        if distance(&bot.pos, &(x, y, z)) <= bot.radius {
+            count += 1;
+        }
+    }
+
+    highest_count.push((count, start, end));
 }
 
 fn main() {
-    let text = read_input::read_text("23/input.txt").unwrap();
+    let text = read_input::read_text("23/example.txt").unwrap();
 
     let mut nanobots = Vec::new();
     let mut largest_radius_with_index = (0, 0);
@@ -44,7 +84,10 @@ fn main() {
             largest_radius_with_index.0 = radius;
             largest_radius_with_index.1 = nanobots.len();
         }
-        nanobots.push(Nanobot{ pos: (coords[0], coords[1], coords[2]) , radius });
+        nanobots.push(Nanobot {
+            pos: (coords[0], coords[1], coords[2]),
+            radius,
+        });
     }
 
     let largest_bot = nanobots.get(largest_radius_with_index.1).unwrap();
@@ -71,58 +114,93 @@ fn main() {
         }
     }
 
+    if (max_x - min_x) % 2 != 0 {
+        max_x += 1;
+    }
+    if (max_y - min_y) % 2 != 0 {
+        max_y += 1;
+    }
+    if (max_z - min_z) % 2 != 0 {
+        max_z += 1;
+    }
+
     println!("{}", part_one_count);
-    println!("{} {} {} {} {} {}", min_x, min_y, min_z, max_x, max_y, max_z);
+    println!(
+        "Start of Part 2: {} {} {} {} {} {}",
+        min_x, min_y, min_z, max_x, max_y, max_z
+    );
 
     loop {
-        let sub_x_size = (max_x - min_x) / 8;
-        let sub_y_size = (max_y - min_y) / 8;
-        let sub_z_size = (max_z - min_z) / 8;
+        let sub_x_size = (max_x - min_x).abs() / 2;
+        let sub_y_size = (max_y - min_y).abs() / 2;
+        let sub_z_size = (max_z - min_z).abs() / 2;
 
         let mut highest_count: Vec<(i64, Coord, Coord)> = Vec::new();
 
-        for sub_x in 0..8 {
-            for sub_y in 0..8 {
-                for sub_z in 0..8 {
-                    let start = ((sub_x * sub_x_size) + min_x, (sub_y * sub_y_size) + min_y, (sub_z * sub_z_size) + min_z);
-                    let end = (((sub_x + 1) * sub_x_size) + min_x, ((sub_y + 1) * sub_y_size) + min_y, ((sub_z + 1) * sub_z_size) + min_z);
-
-                    let mut count = 0;
-
-                    for bot in &nanobots {
-                        let start_bot = (bot.pos.0 - bot.radius, bot.pos.1 - bot.radius, bot.pos.2 - bot.radius);
-                        let end_bot = (bot.pos.0 + bot.radius, bot.pos.1 + bot.radius, bot.pos.2 + bot.radius);
-
-                        if rectangles_intersect(&start, &end, &start_bot, &end_bot) {
-                            count += 1;
-                        }
-                    }
-
-                    highest_count.push((count, start, end));
+        for sub_x in 0..2 {
+            for sub_y in 0..2 {
+                for sub_z in 0..2 {
+                    check_rect(
+                        sub_x,
+                        sub_y,
+                        sub_z,
+                        min_x,
+                        min_y,
+                        min_z,
+                        sub_x_size,
+                        sub_y_size,
+                        sub_z_size,
+                        &nanobots,
+                        &mut highest_count,
+                    );
                 }
             }
         }
 
-        highest_count.sort_by(|a, b| {
-            b.0.cmp(&a.0)
-        });
+        highest_count.sort_by(|a, b| b.0.cmp(&a.0));
 
         let first = highest_count.get(0).unwrap();
 
-        println!("Count collided {}", first.0);
-        
-        min_x = (first.1).0;
-        min_y = (first.1).1;
-        min_z = (first.1).2;
+        let mut coord = first;
+        for obj in highest_count.iter().skip(1) {
+            if obj.0 == first.0 && distance(&obj.1, &(0, 0, 0)) < distance(&first.1, &(0, 0, 0)) {
+                coord = obj;
+            }
+        }
 
-        max_x = (first.2).0;
-        max_y = (first.2).1;
-        max_z = (first.2).2;
+        println!(
+            "{} {} {} {} {} {} size {:?} count {}",
+            min_x,
+            min_y,
+            min_z,
+            max_x,
+            max_y,
+            max_z,
+            (sub_x_size, sub_y_size, sub_z_size),
+            first.0
+        );
+
+        min_x = (coord.1).0;
+        min_y = (coord.1).1;
+        min_z = (coord.1).2;
+
+        max_x = (coord.2).0;
+        max_y = (coord.2).1;
+        max_z = (coord.2).2;
 
         if max_x - min_x <= 1 && max_y - min_y <= 1 && max_z - min_z <= 1 {
-            break
+            break;
         }
     }
 
-    println!("{} {} {} {} {} {}", min_x, min_y, min_z, max_x, max_y, max_z);
+    println!(
+        "Part Two: {} {} {} {} {} {}, {}",
+        min_x,
+        min_y,
+        min_z,
+        max_x,
+        max_y,
+        max_z,
+        min_x.abs() + min_y.abs() + min_z.abs()
+    );
 }

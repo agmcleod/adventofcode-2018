@@ -2,7 +2,7 @@
 pub enum TileType {
     Rocky,
     Wet,
-    Narrow
+    Narrow,
 }
 
 impl TileType {

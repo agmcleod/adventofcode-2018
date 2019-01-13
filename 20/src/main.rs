@@ -1,7 +1,7 @@
 use read_input;
 
-use std::collections::{HashMap, HashSet};
 use std::cmp;
+use std::collections::{HashMap, HashSet};
 
 type Coord = (i32, i32);
 
@@ -10,7 +10,7 @@ enum Direction {
     North,
     East,
     South,
-    West
+    West,
 }
 
 #[derive(Clone)]
@@ -21,7 +21,7 @@ struct Room {
 
 impl Room {
     fn new(coord: Coord) -> Self {
-        Room{
+        Room {
             doors: HashSet::new(),
             coord,
         }
@@ -32,16 +32,16 @@ fn modify_coord_by_direction(coord: &mut Coord, direction: &Direction) {
     match *direction {
         Direction::North => {
             coord.1 -= 1;
-        },
+        }
         Direction::East => {
             coord.0 += 1;
-        },
+        }
         Direction::South => {
             coord.1 += 1;
-        },
+        }
         Direction::West => {
             coord.0 -= 1;
-        },
+        }
     }
 }
 
@@ -98,7 +98,14 @@ fn draw_map(map: &HashMap<Coord, Room>, min_x: i32, min_y: i32, max_x: i32, max_
     }
 }
 
-fn setup_map(text: &String, map: &mut HashMap<Coord, Room>, min_x: &mut i32, min_y: &mut i32, max_x: &mut i32, max_y: &mut i32) {
+fn setup_map(
+    text: &String,
+    map: &mut HashMap<Coord, Room>,
+    min_x: &mut i32,
+    min_y: &mut i32,
+    max_x: &mut i32,
+    max_y: &mut i32,
+) {
     let mut coord: Coord = (0, 0);
     map.insert(coord, Room::new(coord));
     let mut branching_coords: Vec<Coord> = Vec::new();
@@ -171,7 +178,9 @@ fn main() {
     let mut max_x = 0;
     let mut max_y = 0;
 
-    setup_map(&text, &mut map, &mut min_x, &mut min_y, &mut max_x, &mut max_y);
+    setup_map(
+        &text, &mut map, &mut min_x, &mut min_y, &mut max_x, &mut max_y,
+    );
     // draw_map(&map, min_x, min_y, max_x, max_y);
 
     let mut traversed_rooms: HashSet<Coord> = HashSet::new();
@@ -189,7 +198,7 @@ fn main() {
 
         if neighbours.len() == 0 {
             full_paths.push(path);
-            continue
+            continue;
         }
 
         for neighbour in &neighbours {
@@ -199,9 +208,7 @@ fn main() {
         }
     }
 
-    full_paths.sort_by(|a, b| {
-        b.len().cmp(&a.len())
-    });
+    full_paths.sort_by(|a, b| b.len().cmp(&a.len()));
 
     println!("{}", full_paths.get(0).unwrap().len() - 1);
 

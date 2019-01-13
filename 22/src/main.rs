@@ -19,7 +19,9 @@ fn erosion_level(erosion_levels: &HashMap<(usize, usize), usize>, x: usize, y: u
     } else if y == 0 {
         (x * 16807 + DEPTH) % MODULO
     } else {
-        (*erosion_levels.get(&(x - 1, y)).unwrap() * *erosion_levels.get(&(x, y - 1)).unwrap() + DEPTH) % MODULO
+        (*erosion_levels.get(&(x - 1, y)).unwrap() * *erosion_levels.get(&(x, y - 1)).unwrap()
+            + DEPTH)
+            % MODULO
     }
 }
 

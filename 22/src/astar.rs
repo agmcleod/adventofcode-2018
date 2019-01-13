@@ -1,5 +1,5 @@
 use std::cmp::Ordering;
-use std::collections::{HashMap, BinaryHeap};
+use std::collections::{BinaryHeap, HashMap};
 
 use crate::tile_type::TileType;
 use crate::tool::Tool;
@@ -14,8 +14,14 @@ pub struct Location {
 }
 
 impl Location {
-    fn new(position: (usize, usize), estimated_cost: usize, tile_type: TileType, tool: Tool, minutes: usize) -> Self {
-        Location{
+    fn new(
+        position: (usize, usize),
+        estimated_cost: usize,
+        tile_type: TileType,
+        tool: Tool,
+        minutes: usize,
+    ) -> Self {
+        Location {
             position,
             estimated_cost,
             tile_type,
@@ -58,14 +64,14 @@ fn get_other_tool_type(tile_type: &TileType, current_tool: &Tool) -> Tool {
             } else {
                 Tool::ClimbingGear
             }
-        },
+        }
         TileType::Wet => {
             if *current_tool == Tool::ClimbingGear {
                 Tool::Neither
             } else {
                 Tool::ClimbingGear
             }
-        },
+        }
         TileType::Narrow => {
             if *current_tool == Tool::Neither {
                 Tool::Torch
@@ -76,7 +82,12 @@ fn get_other_tool_type(tile_type: &TileType, current_tool: &Tool) -> Tool {
     }
 }
 
-fn get_neighbours(pos: &(usize, usize), current_tool: &Tool, tiles: &Vec<Vec<TileType>>, target: &(usize, usize)) -> Vec<((usize, usize), Tool)> {
+fn get_neighbours(
+    pos: &(usize, usize),
+    current_tool: &Tool,
+    tiles: &Vec<Vec<TileType>>,
+    target: &(usize, usize),
+) -> Vec<((usize, usize), Tool)> {
     let mut coords: Vec<(usize, usize)> = Vec::new();
 
     if pos.0 > 0 {
@@ -101,36 +112,33 @@ fn get_neighbours(pos: &(usize, usize), current_tool: &Tool, tiles: &Vec<Vec<Til
     for coord in &coords {
         if coord.0 == target.0 && coord.1 == target.1 {
             neighbours.push((coord.to_owned(), Tool::Torch));
-            continue
+            continue;
         }
 
         let tile_type = tiles[coord.1][coord.0];
         if tile_type == current_tile_type {
             neighbours.push((coord.to_owned(), *current_tool));
-            neighbours.push((coord.to_owned(), get_other_tool_type(&tile_type, current_tool)));
+            neighbours.push((
+                coord.to_owned(),
+                get_other_tool_type(&tile_type, current_tool),
+            ));
         } else {
             let tool = match current_tile_type {
-                TileType::Rocky => {
-                    match tile_type {
-                        TileType::Narrow => Tool::Torch,
-                        TileType::Wet => Tool::ClimbingGear,
-                        _ => panic!("Cannot change against same tile type")
-                    }
+                TileType::Rocky => match tile_type {
+                    TileType::Narrow => Tool::Torch,
+                    TileType::Wet => Tool::ClimbingGear,
+                    _ => panic!("Cannot change against same tile type"),
                 },
-                TileType::Wet => {
-                    match tile_type {
-                        TileType::Rocky => Tool::ClimbingGear,
-                        TileType::Narrow => Tool::Neither,
-                        _ => panic!("Cannot change against same tile type")
-                    }
+                TileType::Wet => match tile_type {
+                    TileType::Rocky => Tool::ClimbingGear,
+                    TileType::Narrow => Tool::Neither,
+                    _ => panic!("Cannot change against same tile type"),
                 },
-                TileType::Narrow => {
-                    match tile_type {
-                        TileType::Rocky => Tool::Torch,
-                        TileType::Wet => Tool::Neither,
-                        _ => panic!("Cannot change against same tile type")
-                    }
-                }
+                TileType::Narrow => match tile_type {
+                    TileType::Rocky => Tool::Torch,
+                    TileType::Wet => Tool::Neither,
+                    _ => panic!("Cannot change against same tile type"),
+                },
             };
 
             neighbours.push((coord.to_owned(), tool));
@@ -140,12 +148,22 @@ fn get_neighbours(pos: &(usize, usize), current_tool: &Tool, tiles: &Vec<Vec<Til
     neighbours
 }
 
-pub fn find_path(tiles: &Vec<Vec<TileType>>, start_pos: (usize, usize), target: (usize, usize)) -> Vec<(usize, usize)> {
+pub fn find_path(
+    tiles: &Vec<Vec<TileType>>,
+    start_pos: (usize, usize),
+    target: (usize, usize),
+) -> Vec<(usize, usize)> {
     let mut costs: HashMap<((usize, usize), Tool), usize> = HashMap::new();
     costs.insert((start_pos, Tool::Torch), 0);
 
     let mut heap = BinaryHeap::new();
-    heap.push(Location::new(start_pos, 0, tiles[start_pos.1][start_pos.0], Tool::Torch, 0));
+    heap.push(Location::new(
+        start_pos,
+        0,
+        tiles[start_pos.1][start_pos.0],
+        Tool::Torch,
+        0,
+    ));
 
     // current pos, points to last pos + cost of getting here
     let mut closed: HashMap<((usize, usize), Tool), ((usize, usize), Tool)> = HashMap::new();
@@ -159,7 +177,7 @@ pub fn find_path(tiles: &Vec<Vec<TileType>>, start_pos: (usize, usize), target: 
             end_closed.1 = location.tool;
             println!("end {}", location.minutes);
 
-            break
+            break;
         }
 
         let neighbours = get_neighbours(&location.position, &location.tool, &tiles, &target);
@@ -170,16 +188,16 @@ pub fn find_path(tiles: &Vec<Vec<TileType>>, start_pos: (usize, usize), target: 
                 offset_cost = 8;
             }
             let new_cost = costs.get(&(location.position, location.tool)).unwrap() + offset_cost;
-            if !costs.contains_key(&(neighbour, tool_type)) || new_cost < *costs.get(&(neighbour, tool_type)).unwrap() {
-                heap.push(
-                    Location::new(
-                        neighbour,
-                        new_cost + distance_to_target(&neighbour, &target),
-                        target_tile_type,
-                        tool_type,
-                        location.minutes + offset_cost
-                    )
-                );
+            if !costs.contains_key(&(neighbour, tool_type))
+                || new_cost < *costs.get(&(neighbour, tool_type)).unwrap()
+            {
+                heap.push(Location::new(
+                    neighbour,
+                    new_cost + distance_to_target(&neighbour, &target),
+                    target_tile_type,
+                    tool_type,
+                    location.minutes + offset_cost,
+                ));
                 costs.insert((neighbour, tool_type), new_cost);
                 closed.insert((neighbour, tool_type), (location.position, location.tool));
             }
@@ -195,7 +213,7 @@ pub fn find_path(tiles: &Vec<Vec<TileType>>, start_pos: (usize, usize), target: 
             let parent_node = closed.get(&key).unwrap();
             // println!("{:?} using {:?}", key.0, parent_node.1);
             if parent_node.0 == key.0 {
-                break
+                break;
             }
             path.push(parent_node.0);
             key = *parent_node;
