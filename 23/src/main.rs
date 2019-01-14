@@ -67,7 +67,7 @@ fn check_rect(
 }
 
 fn main() {
-    let text = read_input::read_text("23/example.txt").unwrap();
+    let text = read_input::read_text("23/edgecase.txt").unwrap();
 
     let mut nanobots = Vec::new();
     let mut largest_radius_with_index = (0, 0);
@@ -163,22 +163,23 @@ fn main() {
 
         let mut coord = first;
         for obj in highest_count.iter().skip(1) {
-            if obj.0 == first.0 && distance(&obj.1, &(0, 0, 0)) < distance(&first.1, &(0, 0, 0)) {
+            if obj.0 == first.0 && distance(&obj.1, &(0, 0, 0)) < distance(&coord.1, &(0, 0, 0)) {
+                println!("replace {:?} {:?}", obj.1, coord.1);
                 coord = obj;
             }
         }
 
-        println!(
-            "{} {} {} {} {} {} size {:?} count {}",
-            min_x,
-            min_y,
-            min_z,
-            max_x,
-            max_y,
-            max_z,
-            (sub_x_size, sub_y_size, sub_z_size),
-            first.0
-        );
+        // println!(
+        //     "{} {} {} {} {} {} size {:?} count {}",
+        //     min_x,
+        //     min_y,
+        //     min_z,
+        //     max_x,
+        //     max_y,
+        //     max_z,
+        //     (sub_x_size, sub_y_size, sub_z_size),
+        //     first.0
+        // );
 
         min_x = (coord.1).0;
         min_y = (coord.1).1;
@@ -188,19 +189,67 @@ fn main() {
         max_y = (coord.2).1;
         max_z = (coord.2).2;
 
-        if max_x - min_x <= 1 && max_y - min_y <= 1 && max_z - min_z <= 1 {
+        if (max_x - min_x) / 2 == 1 && (max_y - min_y) / 2 == 1 && (max_z - min_z) / 2 == 1 {
+            println!(
+            "Final check {} {} {} {} {} {}",
+                min_x,
+                min_y,
+                min_z,
+                max_x,
+                max_y,
+                max_z,
+            );
+            let mut highest_count = Vec::new();
+            for x in min_x..=max_x {
+                for y in min_y..=max_y {
+                    for z in min_z..=max_z {
+                        check_rect(0, 0, 0, x, y, z, 0, 0, 0, &nanobots, &mut highest_count);
+                    }
+                }
+            }
+
+            highest_count.sort_by(|a, b| b.0.cmp(&a.0));
+
+            let first = highest_count.get(0).unwrap();
+
+            let mut coord = first;
+            for obj in highest_count.iter().skip(1) {
+                if obj.0 == first.0 && distance(&obj.1, &(0, 0, 0)) < distance(&coord.1, &(0, 0, 0)) {
+                    coord = obj;
+                }
+            }
+
+            min_x = (coord.1).0;
+            min_y = (coord.1).1;
+            min_z = (coord.1).2;
+
             break;
         }
     }
 
     println!(
-        "Part Two: {} {} {} {} {} {}, {}",
+        "Part Two: {} {} {}, {}",
         min_x,
         min_y,
         min_z,
-        max_x,
-        max_y,
-        max_z,
         min_x.abs() + min_y.abs() + min_z.abs()
     );
+}
+
+
+#[test]
+fn test_check_rect() {
+    let bots = vec![
+        Nanobot{ pos: (10, 12, 12), radius: 2 },
+        Nanobot{ pos: (12, 14, 12), radius: 2 },
+        Nanobot{ pos: (16, 12, 12), radius: 2 },
+        Nanobot{ pos: (14, 14, 14), radius: 6 },
+        Nanobot{ pos: (50, 50, 50), radius: 200 },
+        Nanobot{ pos: (10, 10, 10), radius: 5 },
+    ];
+
+    let mut highest_count = Vec::new();
+    check_rect(0, 0, 0, 12, 12, 12, 1, 1, 1, &bots, &mut highest_count);
+
+    assert_eq!(highest_count.get(0).unwrap().1, (12, 12, 12));
 }
