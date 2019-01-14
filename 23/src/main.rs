@@ -31,9 +31,6 @@ fn check_rect(
     sub_x: i64,
     sub_y: i64,
     sub_z: i64,
-    min_x: i64,
-    min_y: i64,
-    min_z: i64,
     sub_x_size: i64,
     sub_y_size: i64,
     sub_z_size: i64,
@@ -41,14 +38,14 @@ fn check_rect(
     highest_count: &mut Vec<(i64, Coord, Coord)>,
 ) {
     let start = (
-        (sub_x * sub_x_size) + min_x,
-        (sub_y * sub_y_size) + min_y,
-        (sub_z * sub_z_size) + min_z,
+        sub_x,
+        sub_y,
+        sub_z,
     );
     let end = (
-        ((sub_x + 1) * sub_x_size) + min_x,
-        ((sub_y + 1) * sub_y_size) + min_y,
-        ((sub_z + 1) * sub_z_size) + min_z,
+        sub_x + sub_x_size,
+        sub_y + sub_y_size,
+        sub_z + sub_z_size,
     );
 
     let mut count = 0;
@@ -114,6 +111,8 @@ fn main() {
         }
     }
 
+    println!("{}", part_one_count);
+
     if (max_x - min_x) % 2 != 0 {
         max_x += 1;
     }
@@ -124,32 +123,23 @@ fn main() {
         max_z += 1;
     }
 
-    println!("{}", part_one_count);
-    println!(
-        "Start of Part 2: {} {} {} {} {} {}",
-        min_x, min_y, min_z, max_x, max_y, max_z
-    );
-
     loop {
-        let sub_x_size = (max_x - min_x).abs() / 2;
-        let sub_y_size = (max_y - min_y).abs() / 2;
-        let sub_z_size = (max_z - min_z).abs() / 2;
+        let size_x = (max_x - min_x) / 2;
+        let size_y = (max_y - min_y) / 2;
+        let size_z = (max_z - min_z) / 2;
 
         let mut highest_count: Vec<(i64, Coord, Coord)> = Vec::new();
 
-        for sub_x in 0..2 {
-            for sub_y in 0..2 {
-                for sub_z in 0..2 {
+        for sub_x in (min_x..=max_x).step_by(size_x as usize) {
+            for sub_y in (min_y..=max_y).step_by(size_y as usize) {
+                for sub_z in (min_z..=max_z).step_by(size_z as usize) {
                     check_rect(
                         sub_x,
                         sub_y,
                         sub_z,
-                        min_x,
-                        min_y,
-                        min_z,
-                        sub_x_size,
-                        sub_y_size,
-                        sub_z_size,
+                        size_x,
+                        size_y,
+                        size_z,
                         &nanobots,
                         &mut highest_count,
                     );
@@ -164,22 +154,21 @@ fn main() {
         let mut coord = first;
         for obj in highest_count.iter().skip(1) {
             if obj.0 == first.0 && distance(&obj.1, &(0, 0, 0)) < distance(&coord.1, &(0, 0, 0)) {
-                println!("replace {:?} {:?}", obj.1, coord.1);
                 coord = obj;
             }
         }
 
-        // println!(
-        //     "{} {} {} {} {} {} size {:?} count {}",
-        //     min_x,
-        //     min_y,
-        //     min_z,
-        //     max_x,
-        //     max_y,
-        //     max_z,
-        //     (sub_x_size, sub_y_size, sub_z_size),
-        //     first.0
-        // );
+        println!(
+            "{} {} {} {} {} {} size {:?} count {}",
+            min_x,
+            min_y,
+            min_z,
+            max_x,
+            max_y,
+            max_z,
+            (size_x, size_y, size_z),
+            first.0
+        );
 
         min_x = (coord.1).0;
         min_y = (coord.1).1;
@@ -189,7 +178,7 @@ fn main() {
         max_y = (coord.2).1;
         max_z = (coord.2).2;
 
-        if (max_x - min_x) / 2 == 1 && (max_y - min_y) / 2 == 1 && (max_z - min_z) / 2 == 1 {
+        if size_x == 1 && size_y == 1 && size_z == 1 {
             println!(
             "Final check {} {} {} {} {} {}",
                 min_x,
@@ -203,7 +192,7 @@ fn main() {
             for x in min_x..=max_x {
                 for y in min_y..=max_y {
                     for z in min_z..=max_z {
-                        check_rect(0, 0, 0, x, y, z, 0, 0, 0, &nanobots, &mut highest_count);
+                        check_rect(x, y, z, 0, 0, 0, &nanobots, &mut highest_count);
                     }
                 }
             }
@@ -249,7 +238,7 @@ fn test_check_rect() {
     ];
 
     let mut highest_count = Vec::new();
-    check_rect(0, 0, 0, 12, 12, 12, 1, 1, 1, &bots, &mut highest_count);
+    check_rect(12, 12, 12, 1, 1, 1, &bots, &mut highest_count);
 
     assert_eq!(highest_count.get(0).unwrap().1, (12, 12, 12));
 }
