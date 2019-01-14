@@ -64,7 +64,7 @@ fn check_rect(
 }
 
 fn main() {
-    let text = read_input::read_text("23/edgecase.txt").unwrap();
+    let text = read_input::read_text("23/edgecase3.txt").unwrap();
 
     let mut nanobots = Vec::new();
     let mut largest_radius_with_index = (0, 0);
@@ -90,26 +90,29 @@ fn main() {
     let largest_bot = nanobots.get(largest_radius_with_index.1).unwrap();
     let mut part_one_count = 0;
 
-    let mut min_x = 0;
-    let mut min_y = 0;
-    let mut min_z = 0;
-
-    let mut max_x = 0;
-    let mut max_y = 0;
-    let mut max_z = 0;
+    let mut min_coord = 0;
+    let mut max_coord = 0;
 
     for bot in nanobots.iter() {
-        min_x = cmp::min(min_x, bot.pos.0);
-        min_y = cmp::min(min_y, bot.pos.1);
-        min_z = cmp::min(min_z, bot.pos.2);
+        min_coord = cmp::min(min_coord, bot.pos.0);
+        min_coord = cmp::min(min_coord, bot.pos.1);
+        min_coord = cmp::min(min_coord, bot.pos.2);
 
-        max_x = cmp::max(max_x, bot.pos.0);
-        max_y = cmp::max(max_y, bot.pos.1);
-        max_z = cmp::max(max_z, bot.pos.2);
+        max_coord = cmp::max(max_coord, bot.pos.0);
+        max_coord = cmp::max(max_coord, bot.pos.1);
+        max_coord = cmp::max(max_coord, bot.pos.2);
         if distance(&largest_bot.pos, &bot.pos) <= largest_bot.radius {
             part_one_count += 1;
         }
     }
+
+    let mut min_x = min_coord;
+    let mut min_y = min_coord;
+    let mut min_z = min_coord;
+
+    let mut max_x = max_coord;
+    let mut max_y = max_coord;
+    let mut max_z = max_coord;
 
     println!("{}", part_one_count);
 
