@@ -81,6 +81,9 @@ fn fight(mut groups: Vec<Group>, part_two: bool) -> (bool, usize) {
                 if target.weaknesses.contains(&group.attack_type) {
                     damage *= 2;
                 }
+                if damage < target.hit_points {
+                    continue
+                }
 
                 if damage > best_damage {
                     best_damage = damage;
@@ -109,6 +112,10 @@ fn fight(mut groups: Vec<Group>, part_two: bool) -> (bool, usize) {
 
         groups.sort_by(|a, b| b.initiative.cmp(&a.initiative));
 
+        if attackers_to_defenders.len() == 0 {
+            return (false, 0);
+        }
+
         let attacking_ids: Vec<usize> = groups.iter().map(|g| g.id).collect();
         for attacker in &attacking_ids {
             if !attackers_to_defenders.contains_key(&attacker) {
@@ -130,7 +137,6 @@ fn fight(mut groups: Vec<Group>, part_two: bool) -> (bool, usize) {
                 damage *= 2;
             }
 
-            // println!("Damage {} killing {} dealt by {} to {}", damage, cmp::min(damage / target.hit_points, target.units), attacker.id, target.id);
             target.units -= cmp::min(damage / target.hit_points, target.units);
         }
 
@@ -190,32 +196,42 @@ fn main() {
 
     fight(groups.clone(), false);
 
-    let mut damage_boost = 5_000;
-    let mut increase_by = damage_boost / 2;
+    // let mut units_to_win = std::usize::MAX;
 
-    let mut units_to_win = std::usize::MAX;
-    loop {
+    // let mut left = 0;
+    // let mut right = 5_000;
+
+    // while left < right {
+    //     let damage_boost = (left + right) / 2;
+    //     println!("Try {}", damage_boost);
+    //     let mut groups = groups.clone();
+    //     for group in &mut groups {
+    //         if group.team == Team::Immune {
+    //             group.attack_damage += damage_boost;
+    //         }
+    //     }
+
+    //     let (reindeer_won, count) = fight(groups, true);
+    //     if reindeer_won {
+    //         units_to_win = cmp::min(count, units_to_win);
+
+    //         right = damage_boost - 1;
+    //     } else {
+    //         left = damage_boost + 1;
+    //     }
+    // }
+
+    // println!("Part two {}", units_to_win);
+
+    for n in 78..=90 {
         let mut groups = groups.clone();
         for group in &mut groups {
             if group.team == Team::Immune {
-                group.attack_damage += damage_boost;
+                group.attack_damage += n;
             }
         }
 
-        let (reindeer_won, count) = fight(groups, true);
-        if reindeer_won {
-            units_to_win = cmp::min(count, units_to_win);
-            if increase_by > 1 {
-                increase_by /= 2;
-            }
-
-            damage_boost -= increase_by;
-        } else {
-            if increase_by == 1 {
-                println!("part two {}", units_to_win);
-                break
-            }
-            damage_boost += increase_by;
-        }
+        let result = fight(groups, true);
+        println!("{:?} for {}", result, n);
     }
 }
