@@ -336,5 +336,22 @@
       "args": [],
       "cwd": "${workspaceFolder}"
     },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug executable 'twentyfour'",
+      "cargo": {
+        "args": [
+          "build",
+          "--bin=twentyfour",
+          "--package=twentyfour"
+        ],
+        "filter": {
+          "kind": "bin"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
   ]
 }
