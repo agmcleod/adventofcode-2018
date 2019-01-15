@@ -103,7 +103,7 @@ fn main() {
             // we subtract one here, as we want to check the NEXT iteration.
             // the current index has already been modifed
             let adder = 50_000_000_000 - i - 1;
-            println!("{}", i);
+            // println!("{}", i);
             let sum = part_two_state.iter().fold(0, |sum, (i, pot)| {
                 if *pot == "#" {
                     sum + *i as usize + adder

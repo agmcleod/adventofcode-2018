@@ -20,7 +20,7 @@ struct SubGrid {
 
 impl SubGrid {
     fn new(count: i64, start: Coord, end: Coord, depth: i64) -> Self {
-        SubGrid{
+        SubGrid {
             count,
             start,
             end,
@@ -34,10 +34,12 @@ impl cmp::Ord for SubGrid {
         match self.count.cmp(&other.count) {
             cmp::Ordering::Equal => match self.depth.cmp(&other.depth) {
                 cmp::Ordering::Equal => {
-                    let self_manhattan = (self.start.0).abs() + (self.start.1).abs() + (self.start.2).abs();
-                    let other_manhattan = (other.start.0).abs() + (other.start.1).abs() + (other.start.2).abs();
+                    let self_manhattan =
+                        (self.start.0).abs() + (self.start.1).abs() + (self.start.2).abs();
+                    let other_manhattan =
+                        (other.start.0).abs() + (other.start.1).abs() + (other.start.2).abs();
                     other_manhattan.cmp(&self_manhattan)
-                },
+                }
                 n => n,
             },
             n => n,
@@ -157,7 +159,12 @@ fn main() {
         }
 
         let mut grids: BinaryHeap<SubGrid> = BinaryHeap::new();
-        grids.push(SubGrid::new(nanobots.len() as i64, (min_x, min_y, min_z), (max_x, max_y, max_z), 0));
+        grids.push(SubGrid::new(
+            nanobots.len() as i64,
+            (min_x, min_y, min_z),
+            (max_x, max_y, max_z),
+            0,
+        ));
 
         grids
     };
@@ -176,14 +183,23 @@ fn main() {
 
         // would be zero as the max and min
         if size == 0 {
-            let manhattan_sum = (sub_grid.start.0).abs() + (sub_grid.start.1).abs() + (sub_grid.start.2).abs();
+            let manhattan_sum =
+                (sub_grid.start.0).abs() + (sub_grid.start.1).abs() + (sub_grid.start.2).abs();
             if sub_grid.count > count {
                 count = sub_grid.count;
-                println!("{} for {:?} = {}", sub_grid.count, sub_grid.start, manhattan_sum);
-            } else if sub_grid.count == count && manhattan_sum < *closest_sum_for_count.get(&count).unwrap_or(&std::i64::MAX) {
+                println!(
+                    "{} for {:?} = {}",
+                    sub_grid.count, sub_grid.start, manhattan_sum
+                );
+            } else if sub_grid.count == count
+                && manhattan_sum < *closest_sum_for_count.get(&count).unwrap_or(&std::i64::MAX)
+            {
                 closest_sum_for_count.insert(count, manhattan_sum);
                 count = sub_grid.count;
-                println!("{} for {:?} = {}", sub_grid.count, sub_grid.start, manhattan_sum);
+                println!(
+                    "{} for {:?} = {}",
+                    sub_grid.count, sub_grid.start, manhattan_sum
+                );
             }
         } else {
             if size >= 2 {
@@ -198,7 +214,7 @@ fn main() {
                 for sub_y in (min_y..=max_y).step_by(iter_size) {
                     for sub_z in (min_z..=max_z).step_by(iter_size) {
                         if single_sized_rects_scanned.contains(&(sub_x, sub_y, sub_z, size)) {
-                            continue
+                            continue;
                         }
                         single_sized_rects_scanned.insert((sub_x, sub_y, sub_z, size));
                         check_rect(
@@ -206,7 +222,7 @@ fn main() {
                             (sub_x + size, sub_y + size, sub_z + size),
                             &nanobots,
                             &mut grids,
-                            depth
+                            depth,
                         );
                     }
                 }
